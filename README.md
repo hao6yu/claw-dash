@@ -2,7 +2,9 @@
 
 A beautiful, real-time monitoring dashboard for Mac, Linux, or any system — with **OpenClaw AI integration**.
 
-![Dashboard Preview](preview.png)
+| Live Dashboard | Historical Charts |
+|:--------------:|:-----------------:|
+| ![Live](preview.png) | ![History](preview-history.png) |
 
 ## Why This Exists
 
