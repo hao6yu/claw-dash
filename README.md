@@ -557,4 +557,4 @@ MIT License - See [LICENSE](LICENSE)
 
 Made with 🦞 by [Hao Yu](https://buymeacoffee.com/hao_yu)
 
-If you find this useful, consider buying me a coffee! ☕
+If you find this useful, [buy me a coffee](https://buymeacoffee.com/hao_yu)! ☕
