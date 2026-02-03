@@ -1,6 +1,8 @@
-# 🖥️ System Monitor Dashboard
+# 🦞 claw-dash
 
-A beautiful, real-time monitoring dashboard for Mac, Linux, or any system — with **OpenClaw AI integration**.
+**The dashboard for [OpenClaw](https://github.com/openclaw/openclaw) users.**
+
+Monitor your AI assistant's token usage, costs, sessions, and system health — from anywhere.
 
 | Live Dashboard | Historical Charts |
 |:--------------:|:-----------------:|
