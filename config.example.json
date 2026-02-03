@@ -1,0 +1,23 @@
+{
+  "dashboard": {
+    "title": "Mac Mini Dashboard",
+    "subtitle": "System Monitor"
+  },
+  "api": {
+    "port": 8889
+  },
+  "glances": {
+    "url": "http://localhost:61208",
+    "apiVersion": "4"
+  },
+  "collector": {
+    "intervalSeconds": 60,
+    "retentionDays": 90,
+    "processRetentionDays": 7
+  },
+  "features": {
+    "coffeeLink": "",
+    "showLobster": true,
+    "soundAlerts": false
+  }
+}

@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Mac Mini Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg-gradient-1: #1a1a2e;
+      --bg-gradient-2: #16213e;
+      --card-bg: rgba(255,255,255,0.08);
+      --card-border: rgba(255,255,255,0.1);
+      --text-primary: #fff;
+      --text-secondary: rgba(255,255,255,0.6);
+      --accent-pink: #f472b6;
+      --accent-blue: #60a5fa;
+      --accent-purple: #a78bfa;
+      --accent-green: #4ade80;
+      --accent-orange: #fb923c;
+    }
+    
+    [data-theme="light"] {
+      --bg-gradient-1: #f0f4f8;
+      --bg-gradient-2: #e2e8f0;
+      --card-bg: rgba(0,0,0,0.05);
+      --card-border: rgba(0,0,0,0.1);
+      --text-primary: #1a202c;
+      --text-secondary: rgba(0,0,0,0.6);
+    }
+    
+    [data-theme="crt"] {
+      --bg-gradient-1: #0a0a0a;
+      --bg-gradient-2: #0f1a0f;
+      --card-bg: rgba(0,255,0,0.05);
+      --card-border: rgba(0,255,0,0.2);
+      --text-primary: #00ff00;
+      --text-secondary: rgba(0,255,0,0.6);
+      --accent-pink: #00ff00;
+      --accent-blue: #00ff00;
+      --accent-purple: #00ff00;
+      --accent-green: #00ff00;
+      --accent-orange: #00ff00;
+    }
+    
+    [data-theme="hacker"] {
+      --bg-gradient-1: #000000;
+      --bg-gradient-2: #0d0d0d;
+      --card-bg: rgba(0,255,65,0.08);
+      --card-border: rgba(0,255,65,0.3);
+      --text-primary: #00ff41;
+      --text-secondary: rgba(0,255,65,0.7);
+      --accent-pink: #ff0040;
+      --accent-blue: #00ff41;
+      --accent-purple: #00ff41;
+      --accent-green: #00ff41;
+      --accent-orange: #ff0040;
+    }
+    
+    [data-theme="synthwave"] {
+      --bg-gradient-1: #1a0a2e;
+      --bg-gradient-2: #16213e;
+      --card-bg: rgba(255,0,255,0.08);
+      --card-border: rgba(255,0,255,0.3);
+      --text-primary: #ff71ce;
+      --text-secondary: rgba(255,113,206,0.7);
+      --accent-pink: #ff71ce;
+      --accent-blue: #01cdfe;
+      --accent-purple: #b967ff;
+      --accent-green: #05ffa1;
+      --accent-orange: #fffb96;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 16px;
+      padding-top: env(safe-area-inset-top, 16px);
+      transition: all 0.3s ease;
+    }
+    
+    [data-theme="crt"] body {
+      font-family: 'Courier New', monospace;
+      text-shadow: 0 0 5px var(--text-primary);
+    }
+    
+    /* CRT scanline effect */
+    [data-theme="crt"] body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.15),
+        rgba(0,0,0,0.15) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+    
+    /* CRT flicker */
+    [data-theme="crt"] body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,255,0,0.03);
+      pointer-events: none;
+      z-index: 999;
+      animation: flicker 0.15s infinite;
+    }
+    
+    @keyframes flicker {
+      0%, 100% { opacity: 0.97; }
+      50% { opacity: 1; }
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    
+    .header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    [data-theme="crt"] .header h1 {
+      animation: textGlow 1.5s ease-in-out infinite alternate;
+    }
+    
+    @keyframes textGlow {
+      from { text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00; }
+      to { text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00; }
+    }
+    
+    .header .status {
+      font-size: 11px;
+      color: var(--accent-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    
+    .header .status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* Unified Control Bar */
+    .control-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      background: var(--card-bg);
+      border-radius: 25px;
+      border: 1px solid var(--card-border);
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .control-left, .control-right { display: flex; align-items: center; }
+    
+    .control-tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      padding: 3px;
+      border-radius: 15px;
+    }
+    
+    .control-tabs .tab {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .control-tabs .tab:hover { color: var(--text-primary); }
+    .control-tabs .tab.active {
+      background: var(--card-border);
+      color: var(--text-primary);
+    }
+    
+    .theme-btn, .edit-btn {
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+    }
+    
+    .theme-btn:hover, .edit-btn:hover {
+      background: var(--card-border);
+    }
+    
+    .edit-btn.active {
+      background: var(--accent-orange);
+      color: #000;
+    }
+    
+    .widget-settings {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .coffee-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #ffdd00, #ff9500);
+      border-radius: 50%;
+      font-size: 16px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3);
+      opacity: 0.7;
+      z-index: 1000;
+    }
+    
+    .coffee-btn:hover {
+      transform: scale(1.15);
+      box-shadow: 0 4px 12px rgba(255, 149, 0, 0.5);
+      opacity: 1;
+    }
+    
+    .coffee-btn:active {
+      transform: scale(0.95);
+    }
+    
+    [data-theme="crt"] .coffee-btn {
+      background: rgba(0, 255, 0, 0.2);
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    }
+    
+    [data-theme="hacker"] .coffee-btn {
+      background: rgba(0, 255, 65, 0.2);
+      box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    }
+    
+    [data-theme="synthwave"] .coffee-btn {
+      background: linear-gradient(135deg, #ff6ad5, #c774e8);
+      box-shadow: 0 0 15px rgba(255, 106, 213, 0.5);
+    }
+    
+    .theme-selector {
+      position: relative;
+    }
+    
+    .theme-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      margin-top: 8px;
+      padding: 6px;
+      min-width: 120px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    .theme-dropdown.open {
+      display: block;
+      animation: dropIn 0.2s ease;
+    }
+    
+    @keyframes dropIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .theme-option {
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 12px;
+    }
+    
+    .theme-option:hover {
+      background: var(--card-border);
+    }
+    
+    .theme-option.active {
+      background: var(--accent-pink);
+      color: #fff;
+    }
+    
+    [data-theme="crt"] .theme-option.active {
+      background: #00ff00;
+      color: #000;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+    }
+    
+    [data-theme="crt"] .card {
+      border-radius: 0;
+      box-shadow: 0 0 10px rgba(0,255,0,0.3), inset 0 0 20px rgba(0,255,0,0.05);
+    }
+    
+    .card.wide { grid-column: span 2; }
+    
+    .card-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    
+    .gauge-container {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 4px;
+    }
+    
+    .gauge-bg, .gauge-fill {
+      fill: none;
+      stroke-width: 8;
+      stroke-linecap: round;
+    }
+    
+    .gauge-bg { stroke: var(--card-border); }
+    .gauge-fill { transition: stroke-dashoffset 0.5s ease; }
+    
+    .gauge-fill.cpu { stroke: var(--accent-pink); }
+    .gauge-fill.ram { stroke: var(--accent-blue); }
+    .gauge-fill.disk { stroke: var(--accent-purple); }
+    
+    [data-theme="crt"] .gauge-fill {
+      filter: drop-shadow(0 0 3px var(--accent-green));
+    }
+    
+    .gauge-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .gauge-value span { font-size: 11px; font-weight: 400; }
+    
+    /* Sparklines */
+    .sparkline {
+      height: 24px;
+      margin-top: 4px;
+    }
+    
+    .sparkline canvas {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 12px;
+    }
+    
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-secondary); }
+    .info-value { font-weight: 600; }
+    
+    .network-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 8px;
+    }
+    
+    .net-item { text-align: center; }
+    .net-value { font-size: 16px; font-weight: 700; }
+    .net-value.down { color: var(--accent-green); }
+    .net-value.up { color: var(--accent-pink); }
+    .net-label { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+    
+    .processes { margin-top: 6px; }
+    .process-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      font-size: 11px;
+    }
+    .process-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-right: 8px;
+    }
+    .process-cpu { color: var(--accent-pink); font-weight: 600; min-width: 40px; text-align: right; }
+    
+    /* OpenClaw Stats */
+    .openclaw-card {
+      background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(249,115,22,0.1));
+      border-color: rgba(239,68,68,0.3);
+    }
+    
+    [data-theme="crt"] .openclaw-card {
+      background: rgba(0,255,0,0.05);
+      border-color: rgba(0,255,0,0.3);
+    }
+    
+    .openclaw-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 8px;
+    }
+    
+    .oc-stat { text-align: center; }
+    .oc-value { font-size: 18px; font-weight: 700; color: var(--accent-orange); }
+    .oc-label { font-size: 10px; color: var(--text-secondary); }
+    
+    .oc-details {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--card-border);
+      font-size: 11px;
+    }
+    
+    .oc-detail-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+    
+    .oc-detail-label {
+      color: var(--text-secondary);
+      min-width: 60px;
+    }
+    
+    .oc-detail-value {
+      color: var(--text-primary);
+      font-weight: 500;
+      text-align: right;
+    }
+    
+    .oc-context-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--card-border);
+      border-radius: 3px;
+      margin: 0 8px;
+      overflow: hidden;
+    }
+    
+    .oc-context-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-orange));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    
+    .oc-context-fill.warning {
+      background: linear-gradient(90deg, var(--accent-orange), #ef4444);
+    }
+    
+    .oc-context-fill.critical {
+      background: #ef4444;
+    }
+    
+    /* Achievements */
+    .achievements {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+    
+    .badge {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.4;
+      transition: all 0.3s;
+    }
+    
+    .badge.unlocked {
+      opacity: 1;
+      border-color: var(--accent-green);
+      background: rgba(74,222,128,0.1);
+    }
+    
+    [data-theme="crt"] .badge.unlocked {
+      box-shadow: 0 0 5px var(--accent-green);
+    }
+    
+    /* Sound toggle */
+    .sound-toggle {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 100;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    
+    .sound-toggle:hover {
+      opacity: 1;
+    }
+    
+    /* History View */
+    .time-selector {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .data-range-info {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      padding: 6px 12px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      max-width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .data-range-info.limited {
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    
+    .time-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .time-btn.active {
+      background: var(--accent-pink);
+      color: #fff;
+    }
+    
+    [data-theme="crt"] .time-btn.active {
+      background: #00ff00;
+      color: #000;
+    }
+    
+    .chart-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--card-border);
+    }
+    
+    [data-theme="crt"] .chart-card {
+      border-radius: 0;
+    }
+    
+    .chart-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    
+    .chart-container {
+      height: 150px;
+      position: relative;
+    }
+    
+    /* OpenClaw Card */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .oc-expand-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    
+    .oc-expand-btn:hover { background: var(--card-border); }
+    .oc-expand-btn.expanded { transform: rotate(180deg); }
+    
+    .oc-compact { margin-top: 8px; }
+    
+    .oc-expanded {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--card-border);
+    }
+    
+    .oc-section {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    
+    .oc-section:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .oc-section-title {
+      font-size: 10px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    /* Tokens Tab */
+    .tokens-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .tokens-cost { text-align: center; min-width: 80px; }
+    .tokens-cost .cost-amount { font-size: 22px; font-weight: 700; color: var(--accent-green); }
+    .tokens-cost .cost-label { font-size: 9px; color: var(--text-secondary); }
+    
+    .tokens-chart { flex-shrink: 0; }
+    
+    .tokens-breakdown { flex: 1; font-size: 11px; }
+    .token-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 0;
+    }
+    .token-row.total { border-top: 1px solid var(--card-border); margin-top: 4px; padding-top: 6px; font-weight: 600; }
+    .token-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .token-dot.input { background: #60a5fa; }
+    .token-dot.output { background: #f472b6; }
+    .token-val { margin-left: auto; color: var(--text-primary); }
+    .tokens-note { font-size: 9px; color: var(--text-secondary); text-align: center; margin-top: 8px; opacity: 0.7; }
+    
+    /* Jobs Tab */
+    .jobs-list { max-height: 150px; overflow-y: auto; }
+    
+    .job-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 11px;
+    }
+    
+    .job-item:last-child { border-bottom: none; }
+    
+    .job-name { font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .job-schedule { color: var(--text-secondary); font-size: 10px; }
+    .job-next { color: var(--accent-green); font-size: 10px; margin-left: 8px; }
+    .job-status { margin-left: 6px; }
+    .job-status.ok { color: var(--accent-green); }
+    .job-status.error { color: #ef4444; }
+    
+    /* Connections Card */
+    .connections-card {
+      background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(6,182,212,0.1));
+    }
+    
+    .connections-list { margin-top: 8px; max-height: 120px; overflow-y: auto; }
+    
+    .conn-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    
+    .conn-item:last-child { border-bottom: none; }
+    .conn-process { font-weight: 500; color: var(--accent-blue); }
+    .conn-host { color: var(--text-secondary); flex: 1; margin-left: 8px; text-align: right; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* Process Insights Card */
+    .insights-card {
+      background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.1));
+    }
+    
+    .insights-list { max-height: 180px; overflow-y: auto; }
+    
+    .insight-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 11px;
+      align-items: center;
+    }
+    
+    .insight-item:last-child { border-bottom: none; }
+    
+    .insight-name { 
+      font-weight: 500; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis;
+    }
+    
+    .insight-stat {
+      text-align: right;
+      min-width: 60px;
+    }
+    
+    .insight-current { color: var(--text-primary); }
+    .insight-avg { color: var(--text-secondary); font-size: 9px; }
+    
+    .insight-bar {
+      width: 40px;
+      height: 4px;
+      background: var(--card-border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .insight-bar-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 2px;
+    }
+    
+    .insight-item.anomaly { background: rgba(239,68,68,0.1); border-radius: 4px; padding: 6px 4px; }
+    .insight-item.anomaly .insight-name { color: #ef4444; }
+    
+    .insights-note { font-size: 9px; color: var(--text-secondary); margin-top: 6px; text-align: center; }
+    
+    /* Quote Card */
+    .quote-card {
+      background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(249,115,22,0.1));
+      text-align: center;
+      padding: 16px !important;
+    }
+    
+    .quote-text {
+      font-size: 12px;
+      font-style: italic;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+    
+    .quote-author {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+    
+    /* Pet Lobster */
+    .pet-lobster {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.3s;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .pet-lobster:hover {
+      transform: scale(1.2);
+    }
+    
+    .lobster-body {
+      font-size: 40px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    
+    .lobster-mood {
+      position: absolute;
+      top: -10px;
+      right: -5px;
+      font-size: 16px;
+      animation: bounce 1s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    
+    /* Lobster moods based on CPU */
+    .pet-lobster.chill .lobster-body { animation: float 4s ease-in-out infinite; }
+    .pet-lobster.busy .lobster-body { animation: float 2s ease-in-out infinite; }
+    .pet-lobster.stressed .lobster-body { animation: shake 0.5s ease-in-out infinite; }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    .hidden { display: none !important; }
+    
+    /* Grid Controls & Edit Mode */
+    .widget-toggles {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    
+    .widget-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .widget-toggle.active {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+      color: #000;
+    }
+    
+    .widget-toggle:hover { opacity: 0.8; }
+    
+    .reset-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+    
+    .reset-btn:hover { border-color: var(--accent-orange); color: var(--accent-orange); }
+    
+    /* Edit mode styles */
+    .grid.edit-mode .widget {
+      cursor: grab;
+      position: relative;
+    }
+    
+    .grid.edit-mode .widget:active { cursor: grabbing; }
+    
+    .grid.edit-mode .widget::before {
+      content: '⋮⋮';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      opacity: 0.5;
+    }
+    
+    .widget.sortable-ghost {
+      opacity: 0.4;
+      background: var(--accent-blue) !important;
+    }
+    
+    .widget.sortable-chosen {
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    .widget.widget-hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🖥️ Mac Mini</h1>
+    <div class="status" id="status">Connecting...</div>
+  </div>
+  
+  <a href="https://buymeacoffee.com/hao_yu" target="_blank" class="coffee-btn" title="Buy me a coffee ☕">☕</a>
+  
+  <!-- Unified Control Bar -->
+  <div class="control-bar">
+    <div class="control-left">
+      <div class="theme-selector">
+        <button class="theme-btn" onclick="toggleThemeDropdown()" title="Theme">
+          <span id="current-theme-icon">🌙</span>
+        </button>
+        <div class="theme-dropdown" id="theme-dropdown">
+          <div class="theme-option" onclick="setTheme('dark')">🌙 Dark</div>
+          <div class="theme-option" onclick="setTheme('light')">☀️ Light</div>
+          <div class="theme-option" onclick="setTheme('crt')">📺 CRT</div>
+          <div class="theme-option" onclick="setTheme('hacker')">💀 Hacker</div>
+          <div class="theme-option" onclick="setTheme('synthwave')">🌆 Synthwave</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="control-tabs">
+      <button class="tab active" onclick="showView('live')">Live</button>
+      <button class="tab" onclick="showView('history')">History</button>
+      <button class="tab" onclick="showView('achievements')">🏆</button>
+    </div>
+    
+    <div class="control-right">
+      <button class="edit-btn" id="edit-mode-btn" onclick="toggleEditMode()" title="Edit Layout">✏️</button>
+    </div>
+  </div>
+  
+  <!-- Widget Settings (shown when edit mode active) -->
+  <div class="widget-settings hidden" id="widget-settings">
+    <div class="widget-toggles" id="widget-toggles"></div>
+    <button class="reset-btn" onclick="resetLayout()">↻ Reset</button>
+  </div>
+  
+  <!-- Live View -->
+  <div id="live-view" class="view active">
+    <div class="grid" id="widgets-grid">
+      <!-- OpenClaw Stats - shown only if installed -->
+      <div class="card wide openclaw-card widget" id="openclaw-card" data-widget="openclaw" data-label="🦞 OpenClaw">
+        <div class="card-header">
+          <div class="card-label">🦞 OpenClaw</div>
+          <button class="oc-expand-btn" id="oc-expand-btn" onclick="toggleOcExpand()" title="Toggle view">▼</button>
+        </div>
+        
+        <!-- Compact View (always visible) -->
+        <div class="oc-compact">
+          <div class="openclaw-stats">
+            <div class="oc-stat">
+              <div class="oc-value" id="oc-sessions">--</div>
+              <div class="oc-label">Sessions</div>
+            </div>
+            <div class="oc-stat">
+              <div class="oc-value" id="oc-tokens">--</div>
+              <div class="oc-label">Tokens</div>
+            </div>
+            <div class="oc-stat">
+              <div class="oc-value" id="oc-status">--</div>
+              <div class="oc-label">Status</div>
+            </div>
+            <div class="oc-stat">
+              <div class="oc-value" id="oc-cost-compact">--</div>
+              <div class="oc-label">Est. Cost</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Expanded View (toggled) -->
+        <div class="oc-expanded hidden" id="oc-expanded">
+          <!-- Details Section -->
+          <div class="oc-section">
+            <div class="oc-section-title">System</div>
+            <div class="oc-details">
+              <div class="oc-detail-row">
+                <span class="oc-detail-label">Model</span>
+                <span class="oc-detail-value" id="oc-model">--</span>
+              </div>
+              <div class="oc-detail-row">
+                <span class="oc-detail-label">Context</span>
+                <div class="oc-context-bar">
+                  <div class="oc-context-fill" id="oc-context-fill"></div>
+                </div>
+                <span class="oc-detail-value" id="oc-context">--%</span>
+              </div>
+              <div class="oc-detail-row">
+                <span class="oc-detail-label">Gateway</span>
+                <span class="oc-detail-value" id="oc-gateway">--</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tokens Section -->
+          <div class="oc-section">
+            <div class="oc-section-title">Token Usage</div>
+            <div class="tokens-content">
+              <div class="tokens-cost">
+                <div class="cost-amount" id="cost-total">$0.00</div>
+                <div class="cost-label">Est. Cost</div>
+              </div>
+              <div class="tokens-chart">
+                <canvas id="token-pie" width="60" height="60"></canvas>
+              </div>
+              <div class="tokens-breakdown">
+                <div class="token-row">
+                  <span class="token-dot input"></span>
+                  <span>In</span>
+                  <span class="token-val" id="tokens-input">0</span>
+                </div>
+                <div class="token-row">
+                  <span class="token-dot output"></span>
+                  <span>Out</span>
+                  <span class="token-val" id="tokens-output">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Jobs Section -->
+          <div class="oc-section">
+            <div class="oc-section-title">Scheduled Jobs</div>
+            <div class="jobs-list" id="cron-list">
+              <div class="job-item"><span class="job-name">Loading...</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card widget" id="widget-cpu" data-widget="cpu" data-label="💻 CPU">
+        <div class="card-label">CPU</div>
+        <div class="gauge-container">
+          <svg viewBox="0 0 100 100">
+            <circle class="gauge-bg" cx="50" cy="50" r="40" transform="rotate(-90 50 50)"/>
+            <circle class="gauge-fill cpu" id="cpu-gauge" cx="50" cy="50" r="40" 
+                    transform="rotate(-90 50 50)"
+                    stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+          </svg>
+          <div class="gauge-value"><span id="cpu-value">--</span><span>%</span></div>
+        </div>
+        <div class="sparkline"><canvas id="cpu-spark"></canvas></div>
+      </div>
+      
+      <div class="card widget" id="widget-memory" data-widget="memory" data-label="🧠 Memory">
+        <div class="card-label">Memory</div>
+        <div class="gauge-container">
+          <svg viewBox="0 0 100 100">
+            <circle class="gauge-bg" cx="50" cy="50" r="40" transform="rotate(-90 50 50)"/>
+            <circle class="gauge-fill ram" id="ram-gauge" cx="50" cy="50" r="40"
+                    transform="rotate(-90 50 50)"
+                    stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+          </svg>
+          <div class="gauge-value"><span id="ram-value">--</span><span>%</span></div>
+        </div>
+        <div class="sparkline"><canvas id="ram-spark"></canvas></div>
+      </div>
+      
+      <div class="card widget" id="widget-disk" data-widget="disk" data-label="💾 Disk">
+        <div class="card-label">Disk</div>
+        <div class="gauge-container">
+          <svg viewBox="0 0 100 100">
+            <circle class="gauge-bg" cx="50" cy="50" r="40" transform="rotate(-90 50 50)"/>
+            <circle class="gauge-fill disk" id="disk-gauge" cx="50" cy="50" r="40"
+                    transform="rotate(-90 50 50)"
+                    stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+          </svg>
+          <div class="gauge-value"><span id="disk-value">--</span><span>%</span></div>
+        </div>
+      </div>
+      
+      <div class="card widget" id="widget-system" data-widget="system" data-label="⚙️ System">
+        <div class="card-label">System</div>
+        <div style="text-align: left;">
+          <div class="info-row">
+            <span class="info-label">Uptime</span>
+            <span class="info-value" id="uptime">--</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Load</span>
+            <span class="info-value" id="load">--</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card wide widget" id="widget-network" data-widget="network" data-label="📡 Network">
+        <div class="card-label">Network</div>
+        <div class="network-stats">
+          <div class="net-item">
+            <div class="net-value down" id="net-down">--</div>
+            <div class="net-label">↓ Download</div>
+          </div>
+          <div class="net-item">
+            <div class="net-value up" id="net-up">--</div>
+            <div class="net-label">↑ Upload</div>
+          </div>
+        </div>
+        <div class="sparkline"><canvas id="net-spark"></canvas></div>
+      </div>
+      
+      <div class="card wide widget" id="widget-processes" data-widget="processes" data-label="📋 Top Processes">
+        <div class="card-label">Top Processes</div>
+        <div class="processes" id="processes">
+          <div class="process-item"><span class="process-name">Loading...</span></div>
+        </div>
+      </div>
+      
+      <!-- Process Insights Card -->
+      <div class="card wide insights-card widget" id="widget-insights" data-widget="insights" data-label="📊 Process Insights">
+        <div class="card-label">📊 Process Insights</div>
+        <div class="insights-list" id="insights-list">
+          <div class="insight-item">Loading...</div>
+        </div>
+        <div class="insights-note" id="insights-note"></div>
+      </div>
+      
+      <!-- Connections Card -->
+      <div class="card wide connections-card widget" id="widget-connections" data-widget="connections" data-label="🌐 Connections">
+        <div class="card-label">🌐 Active Connections</div>
+        <div class="connections-list" id="connections-list">
+          <div class="conn-item">Loading...</div>
+        </div>
+      </div>
+      
+      <!-- Quote Card -->
+      <div class="card wide quote-card widget" id="widget-quote" data-widget="quote" data-label="💬 Quote">
+        <div class="quote-text" id="quote-text">"Loading wisdom..."</div>
+        <div class="quote-author" id="quote-author">— Loading</div>
+      </div>
+    </div>
+    
+    <!-- Pet Lobster -->
+    <div class="pet-lobster" id="pet-lobster" title="Hi! I'm Larry the Lobster 🦞">
+      <div class="lobster-body">🦞</div>
+      <div class="lobster-mood" id="lobster-mood">😊</div>
+    </div>
+  </div>
+  
+  <!-- History View -->
+  <div id="history-view" class="view">
+    <div class="time-selector">
+      <button class="time-btn active" onclick="setTimeRange('1h')">1H</button>
+      <button class="time-btn" onclick="setTimeRange('8h')">8H</button>
+      <button class="time-btn" onclick="setTimeRange('24h')">24H</button>
+      <button class="time-btn" onclick="setTimeRange('7d')">7D</button>
+      <button class="time-btn" onclick="setTimeRange('30d')">30D</button>
+    </div>
+    
+    <div class="data-range-info" id="data-range-info">
+      📊 Loading data...
+    </div>
+    
+    <div class="chart-card">
+      <div class="chart-title">CPU Usage</div>
+      <div class="chart-container"><canvas id="cpu-chart"></canvas></div>
+    </div>
+    
+    <div class="chart-card">
+      <div class="chart-title">Memory Usage</div>
+      <div class="chart-container"><canvas id="ram-chart"></canvas></div>
+    </div>
+    
+    <div class="chart-card">
+      <div class="chart-title">Network</div>
+      <div class="chart-container"><canvas id="net-chart"></canvas></div>
+    </div>
+    
+    <div class="chart-card">
+      <div class="chart-title">System Load</div>
+      <div class="chart-container"><canvas id="load-chart"></canvas></div>
+    </div>
+  </div>
+  
+  <!-- Achievements View -->
+  <div id="achievements-view" class="view">
+    <div class="card wide">
+      <div class="card-label">🏆 Achievements</div>
+      <div class="achievements" id="achievements">
+        <!-- Uptime achievements -->
+        <div class="badge" data-badge="uptime-1d"><span>🌟</span> Survivor (1 Day)</div>
+        <div class="badge" data-badge="uptime-7d"><span>⭐</span> Ironman (7 Days)</div>
+        <div class="badge" data-badge="uptime-30d"><span>🏆</span> Immortal (30 Days)</div>
+        <div class="badge" data-badge="uptime-100d"><span>👑</span> Centurion (100 Days)</div>
+        
+        <!-- CPU achievements -->
+        <div class="badge" data-badge="low-cpu"><span>❄️</span> Chill Mode (CPU < 10%)</div>
+        <div class="badge" data-badge="ultra-chill"><span>🧊</span> Frozen (CPU < 3%)</div>
+        <div class="badge" data-badge="high-cpu"><span>🔥</span> Beast Mode (CPU > 90%)</div>
+        <div class="badge" data-badge="on-fire"><span>💥</span> NUCLEAR (CPU = 100%)</div>
+        
+        <!-- Memory achievements -->
+        <div class="badge" data-badge="memory-hog"><span>🐷</span> Memory Hog (RAM > 95%)</div>
+        <div class="badge" data-badge="lean-machine"><span>🏃</span> Lean Machine (RAM < 30%)</div>
+        
+        <!-- Disk achievements -->
+        <div class="badge" data-badge="data-hoarder"><span>💾</span> Data Hoarder (Disk > 80%)</div>
+        <div class="badge" data-badge="minimalist"><span>🧹</span> Minimalist (Disk < 20%)</div>
+        
+        <!-- Network achievements -->
+        <div class="badge" data-badge="network-king"><span>📡</span> Network King (1GB transfer)</div>
+        <div class="badge" data-badge="speed-demon"><span>🚀</span> Speed Demon (10MB/s)</div>
+        
+        <!-- Time achievements -->
+        <div class="badge" data-badge="night-owl"><span>🦉</span> Night Owl (3 AM)</div>
+        <div class="badge" data-badge="early-bird"><span>🐦</span> Early Bird (5 AM)</div>
+        <div class="badge" data-badge="weekend-warrior"><span>🎮</span> Weekend Warrior</div>
+        <div class="badge" data-badge="midnight-coder"><span>🌙</span> Midnight Coder (12 AM)</div>
+        
+        <!-- Usage achievements -->
+        <div class="badge" data-badge="first-visit"><span>👋</span> Hello World!</div>
+        <div class="badge" data-badge="regular"><span>📊</span> Regular (10 visits)</div>
+        <div class="badge" data-badge="addict"><span>🤓</span> Dashboard Addict (50 visits)</div>
+        <div class="badge" data-badge="obsessed"><span>👁️</span> Obsessed (100 visits)</div>
+        
+        <!-- Theme achievements -->
+        <div class="badge" data-badge="theme-explorer"><span>🎨</span> Theme Explorer (All themes)</div>
+        <div class="badge" data-badge="retro-lover"><span>📺</span> Retro Lover (CRT 10 min)</div>
+        
+        <!-- Special achievements -->
+        <div class="badge" data-badge="openclaw"><span>🦞</span> OpenClaw Powered</div>
+        <div class="badge" data-badge="lucky"><span>🍀</span> Lucky (Load = 7.77)</div>
+        <div class="badge" data-badge="nice"><span>😏</span> Nice. (CPU = 69%)</div>
+        <div class="badge" data-badge="leet"><span>💻</span> 1337 (Any stat = 13.37)</div>
+        <div class="badge" data-badge="perfect"><span>💯</span> Perfectionist (CPU = 50.0%)</div>
+      </div>
+    </div>
+    
+    <div class="card wide" style="margin-top: 12px;">
+      <div class="card-label">Stats</div>
+      <div style="text-align: left; font-size: 13px;">
+        <div class="info-row">
+          <span class="info-label">Dashboard Views</span>
+          <span class="info-value" id="stat-views">0</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Badges Unlocked</span>
+          <span class="info-value" id="stat-badges">0/10</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Peak CPU Seen</span>
+          <span class="info-value" id="stat-peak-cpu">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Sound Toggle -->
+  <div class="sound-toggle" id="sound-toggle" onclick="toggleSound()">🔇</div>
+
+  <!-- Audio elements for alerts -->
+  <audio id="alert-sound" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // Detect protocol and path for API URLs
+    const isHTTPS = window.location.protocol === 'https:';
+    const hostname = window.location.hostname;
+    const isLarryPath = window.location.pathname.startsWith('/larry');
+    
+    // Glances API for metrics
+    let GLANCES_API;
+    if (isLarryPath) {
+      // Served via Tailscale /larry path
+      GLANCES_API = `${window.location.origin}/larry/glances/api/4`;
+    } else if (isHTTPS) {
+      GLANCES_API = `https://${hostname}:8445/api/4`;
+    } else {
+      GLANCES_API = `http://${hostname}:61208/api/4`;
+    }
+    
+    // Dashboard API for OpenClaw/history
+    let DASHBOARD_API;
+    if (isLarryPath) {
+      // Served via Tailscale /larry path
+      DASHBOARD_API = `${window.location.origin}/larry/api`;
+    } else if (isHTTPS) {
+      DASHBOARD_API = `https://${hostname}:8444`;
+    } else {
+      DASHBOARD_API = `http://${hostname}:8889`;
+    }
+    
+    // Default API base for metrics
+    const API_BASE = GLANCES_API;
+    const circumference = 2 * Math.PI * 40;
+    let currentTimeRange = '1h';
+    let charts = {};
+    let sparkData = { cpu: [], ram: [], netDown: [], netUp: [] };
+    let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+    let achievements = JSON.parse(localStorage.getItem('achievements') || '{}');
+    let stats = JSON.parse(localStorage.getItem('dashStats') || '{"views":0,"peakCpu":0}');
+    let openclawAvailable = false;
+    let lastAlertTime = 0;
+    let editMode = false;
+    let sortableInstance = null;
+    
+    // Widget management
+    const DEFAULT_WIDGET_ORDER = ['openclaw-card', 'widget-cpu', 'widget-memory', 'widget-disk', 'widget-system', 'widget-network', 'widget-processes', 'widget-insights', 'widget-connections', 'widget-quote'];
+    const WIDGET_LABELS = {
+      'openclaw-card': '🦞 OpenClaw',
+      'widget-cpu': '💻 CPU',
+      'widget-memory': '🧠 Memory',
+      'widget-disk': '💾 Disk',
+      'widget-system': '⚙️ System',
+      'widget-network': '📡 Network',
+      'widget-processes': '📋 Processes',
+      'widget-insights': '📊 Insights',
+      'widget-connections': '🌐 Connections',
+      'widget-quote': '💬 Quote'
+    };
+    
+    function getWidgetOrder() {
+      const saved = localStorage.getItem('widgetOrder');
+      return saved ? JSON.parse(saved) : DEFAULT_WIDGET_ORDER;
+    }
+    
+    function getHiddenWidgets() {
+      const saved = localStorage.getItem('hiddenWidgets');
+      return saved ? JSON.parse(saved) : [];
+    }
+    
+    function saveWidgetOrder(order) {
+      localStorage.setItem('widgetOrder', JSON.stringify(order));
+    }
+    
+    function saveHiddenWidgets(hidden) {
+      localStorage.setItem('hiddenWidgets', JSON.stringify(hidden));
+    }
+    
+    function applyWidgetOrder() {
+      const grid = document.getElementById('widgets-grid');
+      const order = getWidgetOrder();
+      const hidden = getHiddenWidgets();
+      
+      // Sort widgets by saved order
+      order.forEach(id => {
+        const widget = document.getElementById(id);
+        if (widget) {
+          grid.appendChild(widget);
+          widget.classList.toggle('widget-hidden', hidden.includes(id));
+        }
+      });
+    }
+    
+    function toggleEditMode() {
+      editMode = !editMode;
+      const grid = document.getElementById('widgets-grid');
+      const btn = document.getElementById('edit-mode-btn');
+      const settings = document.getElementById('widget-settings');
+      
+      grid.classList.toggle('edit-mode', editMode);
+      btn.classList.toggle('active', editMode);
+      settings.classList.toggle('hidden', !editMode);
+      btn.textContent = editMode ? '✓' : '✏️';
+      
+      if (editMode) {
+        // Initialize Sortable
+        if (!sortableInstance) {
+          sortableInstance = new Sortable(grid, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            filter: '.widget-hidden',
+            onEnd: function() {
+              const order = Array.from(grid.querySelectorAll('.widget')).map(w => w.id);
+              saveWidgetOrder(order);
+            }
+          });
+        }
+        // Build toggle buttons
+        buildWidgetToggles();
+      } else {
+        // Destroy Sortable when exiting edit mode
+        if (sortableInstance) {
+          sortableInstance.destroy();
+          sortableInstance = null;
+        }
+      }
+    }
+    
+    function buildWidgetToggles() {
+      const container = document.getElementById('widget-toggles');
+      const hidden = getHiddenWidgets();
+      
+      container.innerHTML = Object.entries(WIDGET_LABELS).map(([id, label]) => {
+        const isActive = !hidden.includes(id);
+        return `<button class="widget-toggle ${isActive ? 'active' : ''}" onclick="toggleWidget('${id}')">${label.split(' ')[0]}</button>`;
+      }).join('');
+    }
+    
+    function toggleWidget(id) {
+      const hidden = getHiddenWidgets();
+      const idx = hidden.indexOf(id);
+      
+      if (idx >= 0) {
+        hidden.splice(idx, 1);
+      } else {
+        hidden.push(id);
+      }
+      
+      saveHiddenWidgets(hidden);
+      document.getElementById(id)?.classList.toggle('widget-hidden', hidden.includes(id));
+      buildWidgetToggles();
+    }
+    
+    function resetLayout() {
+      localStorage.removeItem('widgetOrder');
+      localStorage.removeItem('hiddenWidgets');
+      applyWidgetOrder();
+      buildWidgetToggles();
+    }
+    
+    // Apply saved layout on load
+    document.addEventListener('DOMContentLoaded', applyWidgetOrder);
+    
+    // Initialize
+    stats.views++;
+    localStorage.setItem('dashStats', JSON.stringify(stats));
+    unlockBadge('first-visit');
+    
+    // Check time-based achievements
+    const currentHour = new Date().getHours();
+    const currentDay = new Date().getDay();
+    if (currentHour === 3) unlockBadge('night-owl');
+    if (currentHour === 5) unlockBadge('early-bird');
+    if (currentHour === 0) unlockBadge('midnight-coder');
+    if (currentDay === 0 || currentDay === 6) unlockBadge('weekend-warrior');
+    
+    // Visit count achievements
+    if (stats.views >= 10) unlockBadge('regular');
+    if (stats.views >= 50) unlockBadge('addict');
+    if (stats.views >= 100) unlockBadge('obsessed');
+    
+    // Update sound toggle icon
+    document.getElementById('sound-toggle').textContent = soundEnabled ? '🔊' : '🔇';
+    
+    // Theme info - must be defined before setTheme is called
+    const themeInfo = {
+      dark: { icon: '🌙', name: 'Dark Mode' },
+      light: { icon: '☀️', name: 'Light Mode' },
+      crt: { icon: '📺', name: 'Retro CRT' },
+      hacker: { icon: '💀', name: 'Hacker' },
+      synthwave: { icon: '🌆', name: 'Synthwave' }
+    };
+    
+    let themesUsed = JSON.parse(localStorage.getItem('themesUsed') || '[]');
+    let crtStartTime = null;
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    
+    // Chart.js defaults
+    Chart.defaults.color = 'rgba(255,255,255,0.6)';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+    
+    function toggleThemeDropdown() {
+      const dropdown = document.getElementById('theme-dropdown');
+      dropdown.classList.toggle('open');
+      
+      // Close when clicking outside
+      if (dropdown.classList.contains('open')) {
+        setTimeout(() => {
+          document.addEventListener('click', closeDropdownOutside);
+        }, 10);
+      }
+    }
+    
+    function closeDropdownOutside(e) {
+      const dropdown = document.getElementById('theme-dropdown');
+      const toggle = document.querySelector('.theme-toggle');
+      if (!dropdown.contains(e.target) && !toggle.contains(e.target)) {
+        dropdown.classList.remove('open');
+        document.removeEventListener('click', closeDropdownOutside);
+      }
+    }
+    
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      
+      // Update toggle button icon
+      document.getElementById('current-theme-icon').textContent = themeInfo[theme].icon;
+      
+      // Update dropdown active state
+      document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+      const options = document.querySelectorAll('.theme-option');
+      const idx = ['dark', 'light', 'crt', 'hacker', 'synthwave'].indexOf(theme);
+      if (options[idx]) options[idx].classList.add('active');
+      
+      // Close dropdown
+      document.getElementById('theme-dropdown').classList.remove('open');
+      
+      // Track themes used
+      if (!themesUsed.includes(theme)) {
+        themesUsed.push(theme);
+        localStorage.setItem('themesUsed', JSON.stringify(themesUsed));
+        if (themesUsed.length >= 5) unlockBadge('theme-explorer');
+      }
+      
+      // Track CRT time for retro-lover badge
+      if (theme === 'crt') {
+        crtStartTime = Date.now();
+      } else if (crtStartTime) {
+        const crtTime = (Date.now() - crtStartTime) / 1000 / 60; // minutes
+        const totalCrtTime = parseFloat(localStorage.getItem('crtTime') || '0') + crtTime;
+        localStorage.setItem('crtTime', totalCrtTime.toString());
+        if (totalCrtTime >= 10) unlockBadge('retro-lover');
+        crtStartTime = null;
+      }
+      
+      // Update chart colors based on theme
+      const textColor = theme === 'light' ? 'rgba(0,0,0,0.6)' : 
+                       (theme === 'crt' || theme === 'hacker') ? '#00ff41' : 
+                       theme === 'synthwave' ? '#ff71ce' : 'rgba(255,255,255,0.6)';
+      Chart.defaults.color = textColor;
+    }
+    
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem('soundEnabled', soundEnabled);
+      document.getElementById('sound-toggle').textContent = soundEnabled ? '🔊' : '🔇';
+      if (soundEnabled) {
+        document.getElementById('alert-sound').play().catch(() => {});
+      }
+    }
+    
+    function playAlert() {
+      if (soundEnabled && Date.now() - lastAlertTime > 30000) {
+        document.getElementById('alert-sound').play().catch(() => {});
+        lastAlertTime = Date.now();
+      }
+    }
+    
+    function unlockBadge(badgeId) {
+      if (achievements[badgeId]) return;
+      achievements[badgeId] = Date.now();
+      localStorage.setItem('achievements', JSON.stringify(achievements));
+      updateBadgeDisplay();
+    }
+    
+    function updateBadgeDisplay() {
+      document.querySelectorAll('.badge').forEach(badge => {
+        const id = badge.dataset.badge;
+        if (achievements[id]) {
+          badge.classList.add('unlocked');
+        }
+      });
+      const unlocked = Object.keys(achievements).length;
+      document.getElementById('stat-badges').textContent = `${unlocked}/28`;
+      document.getElementById('stat-views').textContent = stats.views;
+      document.getElementById('stat-peak-cpu').textContent = `${stats.peakCpu}%`;
+    }
+    
+    function setGauge(id, percent) {
+      const gauge = document.getElementById(id);
+      const offset = circumference - (percent / 100) * circumference;
+      gauge.style.strokeDashoffset = offset;
+    }
+    
+    function formatBytes(bytes, perSec = false) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      const val = (bytes / Math.pow(k, i)).toFixed(1);
+      return val + ' ' + sizes[i] + (perSec ? '/s' : '');
+    }
+    
+    function drawSparkline(canvasId, data, color) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.offsetWidth;
+      const height = canvas.offsetHeight;
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      ctx.scale(2, 2);
+      
+      if (data.length < 2) return;
+      
+      const max = Math.max(...data, 1);
+      const min = Math.min(...data, 0);
+      const range = max - min || 1;
+      
+      ctx.clearRect(0, 0, width, height);
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      
+      data.forEach((val, i) => {
+        const x = (i / (data.length - 1)) * width;
+        const y = height - ((val - min) / range) * height;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+    
+    function showView(view) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(view + '-view').classList.add('active');
+      event.target.classList.add('active');
+      
+      if (view === 'history') loadHistory();
+      if (view === 'achievements') updateBadgeDisplay();
+    }
+    
+    function setTimeRange(range) {
+      currentTimeRange = range;
+      document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      loadHistory();
+    }
+    
+    async function fetchOpenClawStats() {
+      try {
+        const res = await fetch(`${DASHBOARD_API}/openclaw`);
+        if (!res.ok) throw new Error('Not available');
+        const data = await res.json();
+        
+        if (data.installed) {
+          openclawAvailable = true;
+          document.getElementById('openclaw-card').classList.remove('hidden');
+          document.getElementById('oc-sessions').textContent = data.sessions || '0';
+          
+          // Show 24h tokens if available, fall back to total
+          const tokensDisplay = data.tokens24h > 0 ? data.tokens24h : data.tokens;
+          document.getElementById('oc-tokens').textContent = formatNumber(tokensDisplay || 0);
+          
+          // Show status with indicator for cached data
+          let statusText = data.status || '--';
+          if (data.status === 'down') {
+            statusText = '⚠️ down';
+          } else if (data.cached) {
+            statusText = '📦 cached';
+          }
+          document.getElementById('oc-status').textContent = statusText;
+          
+          // Extended stats
+          // Model (shorten for display)
+          const modelDisplay = (data.model || 'unknown').replace('claude-', '').replace('anthropic/', '');
+          document.getElementById('oc-model').textContent = modelDisplay;
+          
+          // Context bar
+          const contextPct = data.contextUsed || 0;
+          document.getElementById('oc-context').textContent = contextPct + '%';
+          const contextFill = document.getElementById('oc-context-fill');
+          contextFill.style.width = contextPct + '%';
+          contextFill.classList.remove('warning', 'critical');
+          if (contextPct >= 80) contextFill.classList.add('critical');
+          else if (contextPct >= 60) contextFill.classList.add('warning');
+          
+          // Gateway
+          const gwLatency = data.gatewayLatency;
+          const gwStatus = data.gatewayStatus || 'unknown';
+          document.getElementById('oc-gateway').textContent = gwLatency ? `${gwLatency}ms` : gwStatus;
+          
+          // Add subtle indicator if using cached data
+          const card = document.getElementById('openclaw-card');
+          if (data.cached || data.status === 'down') {
+            card.style.opacity = '0.7';
+          } else {
+            card.style.opacity = '1';
+            unlockBadge('openclaw');
+          }
+        } else {
+          document.getElementById('openclaw-card').classList.add('hidden');
+        }
+      } catch {
+        document.getElementById('openclaw-card').classList.add('hidden');
+      }
+    }
+    
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toString();
+    }
+    
+    async function fetchLiveData() {
+      try {
+        const [cpu, mem, disk, load, net, procs, uptime] = await Promise.all([
+          fetch(`${API_BASE}/cpu`).then(r => r.json()),
+          fetch(`${API_BASE}/mem`).then(r => r.json()),
+          fetch(`${API_BASE}/fs`).then(r => r.json()),
+          fetch(`${API_BASE}/load`).then(r => r.json()),
+          fetch(`${API_BASE}/network`).then(r => r.json()),
+          fetch(`${API_BASE}/processlist`).then(r => r.json()),
+          fetch(`${API_BASE}/uptime`).then(r => r.text())
+        ]);
+        
+        const cpuPercent = Math.round(cpu.total || 0);
+        document.getElementById('cpu-value').textContent = cpuPercent;
+        setGauge('cpu-gauge', cpuPercent);
+        
+        // Track peak CPU
+        if (cpuPercent > stats.peakCpu) {
+          stats.peakCpu = cpuPercent;
+          localStorage.setItem('dashStats', JSON.stringify(stats));
+        }
+        
+        // CPU achievements
+        if (cpuPercent < 10) unlockBadge('low-cpu');
+        if (cpuPercent < 3) unlockBadge('ultra-chill');
+        if (cpuPercent > 90) {
+          unlockBadge('high-cpu');
+          playAlert();
+        }
+        if (cpuPercent >= 100) unlockBadge('on-fire');
+        if (cpuPercent === 69) unlockBadge('nice');
+        if (Math.abs(cpuPercent - 50.0) < 0.5) unlockBadge('perfect');
+        if (Math.abs(cpuPercent - 13.37) < 0.1) unlockBadge('leet');
+        
+        // Sparkline data
+        sparkData.cpu.push(cpuPercent);
+        if (sparkData.cpu.length > 30) sparkData.cpu.shift();
+        drawSparkline('cpu-spark', sparkData.cpu, getComputedStyle(document.documentElement).getPropertyValue('--accent-pink').trim());
+        
+        const memPercent = Math.round(mem.percent || 0);
+        document.getElementById('ram-value').textContent = memPercent;
+        setGauge('ram-gauge', memPercent);
+        
+        sparkData.ram.push(memPercent);
+        if (sparkData.ram.length > 30) sparkData.ram.shift();
+        drawSparkline('ram-spark', sparkData.ram, getComputedStyle(document.documentElement).getPropertyValue('--accent-blue').trim());
+        
+        // RAM achievements
+        if (memPercent > 90) playAlert();
+        if (memPercent > 95) unlockBadge('memory-hog');
+        if (memPercent < 30) unlockBadge('lean-machine');
+        if (Math.abs(memPercent - 13.37) < 0.1) unlockBadge('leet');
+        
+        const mainDisk = disk.find(d => d.mnt_point === '/') || disk[0];
+        const diskPercent = Math.round(mainDisk?.percent || 0);
+        document.getElementById('disk-value').textContent = diskPercent;
+        setGauge('disk-gauge', diskPercent);
+        
+        if (diskPercent > 80) unlockBadge('data-hoarder');
+        if (diskPercent < 20) unlockBadge('minimalist');
+        
+        document.getElementById('load').textContent = `${load.min1?.toFixed(2) || '--'}`;
+        
+        const uptimeStr = uptime.replace(/"/g, '') || '--';
+        document.getElementById('uptime').textContent = uptimeStr;
+        
+        // Uptime achievements
+        if (uptimeStr.includes('day')) {
+          const days = parseInt(uptimeStr);
+          if (days >= 1) unlockBadge('uptime-1d');
+          if (days >= 7) unlockBadge('uptime-7d');
+          if (days >= 30) unlockBadge('uptime-30d');
+          if (days >= 100) unlockBadge('uptime-100d');
+        }
+        
+        // Lucky load achievement
+        if (Math.abs(load.min1 - 7.77) < 0.01) unlockBadge('lucky');
+        if (Math.abs(load.min1 - 13.37) < 0.01) unlockBadge('leet');
+        
+        let totalDown = 0, totalUp = 0;
+        net.forEach(iface => {
+          if (iface.interface_name !== 'lo') {
+            totalDown += iface.bytes_recv_rate_per_sec || 0;
+            totalUp += iface.bytes_sent_rate_per_sec || 0;
+          }
+        });
+        document.getElementById('net-down').textContent = formatBytes(totalDown, true);
+        document.getElementById('net-up').textContent = formatBytes(totalUp, true);
+        
+        // Network sparkline (combined)
+        sparkData.netDown.push(totalDown / 1024);
+        sparkData.netUp.push(totalUp / 1024);
+        if (sparkData.netDown.length > 30) sparkData.netDown.shift();
+        if (sparkData.netUp.length > 30) sparkData.netUp.shift();
+        drawSparkline('net-spark', sparkData.netDown, getComputedStyle(document.documentElement).getPropertyValue('--accent-green').trim());
+        
+        // Network achievements
+        const totalTransfer = sparkData.netDown.reduce((a, b) => a + b, 0) + sparkData.netUp.reduce((a, b) => a + b, 0);
+        if (totalTransfer > 1024 * 1024) unlockBadge('network-king');
+        
+        // Speed demon - 10MB/s
+        if (totalDown > 10 * 1024 * 1024 || totalUp > 10 * 1024 * 1024) unlockBadge('speed-demon');
+        
+        const topProcs = procs
+          .sort((a, b) => (b.cpu_percent || 0) - (a.cpu_percent || 0))
+          .slice(0, 5);
+        document.getElementById('processes').innerHTML = topProcs.map(p => `
+          <div class="process-item">
+            <span class="process-name">${p.name || 'Unknown'}</span>
+            <span class="process-cpu">${(p.cpu_percent || 0).toFixed(1)}%</span>
+          </div>
+        `).join('');
+        
+        document.getElementById('status').textContent = 'Online';
+        document.getElementById('status').style.color = 'var(--accent-green)';
+        
+      } catch (err) {
+        document.getElementById('status').textContent = 'Connection error';
+        document.getElementById('status').style.color = '#f87171';
+      }
+    }
+    
+    function formatTime(timestamp, range, dataSpanHours = 24) {
+      const date = new Date(timestamp * 1000);
+      // If data spans less than a day, always show time regardless of selected range
+      if (dataSpanHours < 24) {
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      }
+      if (range === '7d' || range === '30d') {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function getChartColors() {
+      const theme = document.documentElement.getAttribute('data-theme');
+      if (theme === 'crt') {
+        return { pink: '#00ff00', blue: '#00ff00', purple: '#00ff00', green: '#00ff00' };
+      }
+      return { pink: '#f472b6', blue: '#60a5fa', purple: '#a78bfa', green: '#4ade80' };
+    }
+    
+    function createChart(canvasId, label, colorKey, data, range, dataSpanHours = 24) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      const colors = getChartColors();
+      
+      if (charts[canvasId]) charts[canvasId].destroy();
+      
+      charts[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(d => formatTime(d.ts, range, dataSpanHours)),
+          datasets: [{
+            label: label,
+            data: data.map(d => d.value),
+            borderColor: colors[colorKey],
+            backgroundColor: colors[colorKey] + '20',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
+            y: { min: 0, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+    
+    function createNetChart(data, range, dataSpanHours = 24) {
+      const ctx = document.getElementById('net-chart').getContext('2d');
+      const colors = getChartColors();
+      
+      if (charts['net-chart']) charts['net-chart'].destroy();
+      
+      charts['net-chart'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(d => formatTime(d.timestamp, range, dataSpanHours)),
+          datasets: [
+            {
+              label: 'Download',
+              data: data.map(d => d.net_down / 1024),
+              borderColor: colors.green,
+              backgroundColor: colors.green + '20',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              borderWidth: 2
+            },
+            {
+              label: 'Upload',
+              data: data.map(d => d.net_up / 1024),
+              borderColor: colors.pink,
+              backgroundColor: colors.pink + '20',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
+            y: { min: 0, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { font: { size: 10 }, callback: v => v.toFixed(0) + ' KB/s' } }
+          }
+        }
+      });
+    }
+    
+    async function loadHistory() {
+      try {
+        const res = await fetch(`${DASHBOARD_API}/history?range=${currentTimeRange}`);
+        const data = await res.json();
+        
+        const infoEl = document.getElementById('data-range-info');
+        
+        if (!data.metrics || data.metrics.length === 0) {
+          infoEl.textContent = '📊 No data yet - collector is gathering samples...';
+          infoEl.classList.add('limited');
+          return;
+        }
+        
+        const metrics = data.metrics;
+        const colors = getChartColors();
+        
+        // Calculate actual data span in hours
+        const firstTs = metrics[0].timestamp;
+        const lastTs = metrics[metrics.length - 1].timestamp;
+        const dataSpanHours = (lastTs - firstTs) / 3600;
+        
+        // Update data range info
+        const rangeLabels = { '1h': 1, '8h': 8, '24h': 24, '7d': 168, '30d': 720 };
+        const requestedHours = rangeLabels[currentTimeRange] || 1;
+        const firstDate = new Date(firstTs * 1000);
+        const lastDate = new Date(lastTs * 1000);
+        
+        const formatDateTime = (d) => d.toLocaleString('en-US', { 
+          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+        });
+        
+        if (dataSpanHours < requestedHours * 0.9) {
+          // Less data than requested
+          const spanText = dataSpanHours < 1 
+            ? `${Math.round(dataSpanHours * 60)}min` 
+            : dataSpanHours < 24 
+              ? `${dataSpanHours.toFixed(1)}h`
+              : `${(dataSpanHours / 24).toFixed(1)}d`;
+          infoEl.innerHTML = `⏳ Only <strong>${spanText}</strong> of data available (${metrics.length} samples)<br><small>${formatDateTime(firstDate)} → ${formatDateTime(lastDate)}</small>`;
+          infoEl.classList.add('limited');
+        } else {
+          infoEl.innerHTML = `📊 ${metrics.length} samples<br><small>${formatDateTime(firstDate)} → ${formatDateTime(lastDate)}</small>`;
+          infoEl.classList.remove('limited');
+        }
+        
+        createChart('cpu-chart', 'CPU %', 'pink', metrics.map(m => ({ ts: m.timestamp, value: m.cpu })), currentTimeRange, dataSpanHours);
+        createChart('ram-chart', 'RAM %', 'blue', metrics.map(m => ({ ts: m.timestamp, value: m.ram })), currentTimeRange, dataSpanHours);
+        createChart('load-chart', 'Load', 'purple', metrics.map(m => ({ ts: m.timestamp, value: m.load1 })), currentTimeRange, dataSpanHours);
+        createNetChart(metrics, currentTimeRange, dataSpanHours);
+        
+      } catch (err) {
+        console.error('Failed to load history:', err);
+      }
+    }
+    
+    // OpenClaw expand/collapse toggle
+    let ocExpanded = localStorage.getItem('ocExpanded') === 'true';
+    
+    function toggleOcExpand() {
+      ocExpanded = !ocExpanded;
+      localStorage.setItem('ocExpanded', ocExpanded);
+      updateOcExpandState();
+    }
+    
+    function updateOcExpandState() {
+      const expanded = document.getElementById('oc-expanded');
+      const btn = document.getElementById('oc-expand-btn');
+      if (expanded && btn) {
+        expanded.classList.toggle('hidden', !ocExpanded);
+        btn.classList.toggle('expanded', ocExpanded);
+        btn.textContent = ocExpanded ? '▲' : '▼';
+      }
+    }
+    
+    // Initialize expand state on load
+    document.addEventListener('DOMContentLoaded', updateOcExpandState);
+    
+    // Token pie chart
+    function drawTokenPie(input, output) {
+      const canvas = document.getElementById('token-pie');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const total = input + output;
+      if (total === 0) return;
+      
+      const centerX = 40, centerY = 40, radius = 35;
+      ctx.clearRect(0, 0, 80, 80);
+      
+      // Input slice (blue)
+      const inputAngle = (input / total) * 2 * Math.PI;
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, -Math.PI/2, -Math.PI/2 + inputAngle);
+      ctx.fillStyle = '#60a5fa';
+      ctx.fill();
+      
+      // Output slice (pink)
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, -Math.PI/2 + inputAngle, -Math.PI/2 + 2*Math.PI);
+      ctx.fillStyle = '#f472b6';
+      ctx.fill();
+    }
+    
+    async function fetchTokens() {
+      try {
+        const res = await fetch(`${DASHBOARD_API}/tokens`);
+        const data = await res.json();
+        
+        const costStr = '$' + (data.cost?.total || 0).toFixed(2);
+        document.getElementById('cost-total').textContent = costStr;
+        document.getElementById('oc-cost-compact').textContent = costStr;
+        document.getElementById('tokens-input').textContent = formatNumber(data.input || 0);
+        document.getElementById('tokens-output').textContent = formatNumber(data.output || 0);
+        
+        drawTokenPie(data.input || 0, data.output || 0);
+      } catch (e) {
+        console.error('Failed to fetch tokens:', e);
+      }
+    }
+    
+    async function fetchCronJobs() {
+      try {
+        const res = await fetch(`${DASHBOARD_API}/cron`);
+        const data = await res.json();
+        const container = document.getElementById('cron-list');
+        
+        if (!data.jobs || data.jobs.length === 0) {
+          container.innerHTML = '<div class="job-item"><span class="job-name">No scheduled jobs</span></div>';
+          return;
+        }
+        
+        container.innerHTML = data.jobs.slice(0, 5).map(job => {
+          const nextRun = job.nextRun ? new Date(job.nextRun).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          }) : 'N/A';
+          const statusIcon = job.lastStatus === 'ok' ? '✓' : job.lastStatus === 'error' ? '✗' : '○';
+          const statusClass = job.lastStatus || '';
+          
+          return `
+            <div class="job-item">
+              <span class="job-name" title="${job.name}">${job.name}</span>
+              <span class="job-schedule">${job.schedule}</span>
+              <span class="job-next">→ ${nextRun}</span>
+              <span class="job-status ${statusClass}">${statusIcon}</span>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('Failed to fetch cron:', e);
+      }
+    }
+    
+    async function fetchConnections() {
+      try {
+        const res = await fetch(`${DASHBOARD_API}/connections`);
+        const data = await res.json();
+        const container = document.getElementById('connections-list');
+        
+        if (!data.connections || data.connections.length === 0) {
+          container.innerHTML = '<div class="conn-item">No active connections</div>';
+          return;
+        }
+        
+        container.innerHTML = data.connections.slice(0, 8).map(conn => `
+          <div class="conn-item">
+            <span class="conn-process">${conn.process}</span>
+            <span class="conn-host">${conn.host}:${conn.port}</span>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to fetch connections:', e);
+      }
+    }
+    
+    async function fetchQuote() {
+      try {
+        const res = await fetch(`${DASHBOARD_API}/quote`);
+        const data = await res.json();
+        
+        document.getElementById('quote-text').textContent = `"${data.text}"`;
+        document.getElementById('quote-author').textContent = `— ${data.author}`;
+      } catch (e) {
+        console.error('Failed to fetch quote:', e);
+      }
+    }
+    
+    async function fetchProcessInsights() {
+      try {
+        const res = await fetch(`${DASHBOARD_API}/processes`);
+        const data = await res.json();
+        const container = document.getElementById('insights-list');
+        const note = document.getElementById('insights-note');
+        
+        if (!data.processes || data.processes.length === 0) {
+          container.innerHTML = '<div class="insight-item">No process data</div>';
+          return;
+        }
+        
+        container.innerHTML = data.processes.map(proc => {
+          const cpuPct = Math.min(100, proc.cpu);
+          const hasHistory = proc.avg_cpu !== null;
+          const isAnomaly = proc.anomaly;
+          
+          return `
+            <div class="insight-item ${isAnomaly ? 'anomaly' : ''}">
+              <span class="insight-name" title="${proc.name}">${proc.name}</span>
+              <div class="insight-stat">
+                <div class="insight-current">${proc.cpu.toFixed(1)}% CPU</div>
+                ${hasHistory ? `<div class="insight-avg">avg: ${proc.avg_cpu}%</div>` : ''}
+              </div>
+              <div class="insight-stat">
+                <div class="insight-current">${proc.ram_mb} MB</div>
+                ${hasHistory ? `<div class="insight-avg">avg: ${proc.avg_ram} MB</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        // Show note about anomalies or collecting data
+        if (data.anomalies && data.anomalies.length > 0) {
+          note.innerHTML = `⚠️ ${data.anomalies.length} process(es) above normal usage`;
+          note.style.color = '#ef4444';
+        } else if (!data.hasHistory) {
+          note.innerHTML = '⏳ Collecting baseline data...';
+          note.style.color = '';
+        } else {
+          note.innerHTML = '✓ All processes normal';
+          note.style.color = 'var(--accent-green)';
+        }
+      } catch (e) {
+        console.error('Failed to fetch process insights:', e);
+      }
+    }
+    
+    // Pet Lobster mood based on CPU
+    let currentCpu = 0;
+    function updateLobsterMood() {
+      const lobster = document.getElementById('pet-lobster');
+      const mood = document.getElementById('lobster-mood');
+      
+      lobster.classList.remove('chill', 'busy', 'stressed');
+      
+      if (currentCpu < 30) {
+        lobster.classList.add('chill');
+        mood.textContent = '😊';
+      } else if (currentCpu < 70) {
+        lobster.classList.add('busy');
+        mood.textContent = '😅';
+      } else {
+        lobster.classList.add('stressed');
+        mood.textContent = '🔥';
+      }
+    }
+    
+    // Make lobster clickable for fun
+    document.getElementById('pet-lobster')?.addEventListener('click', () => {
+      const messages = [
+        "🦞 *click click*",
+        "🦞 I'm Larry! I watch your CPU!",
+        "🦞 Everything's running smoothly!",
+        "🦞 Need more RAM? Me too!",
+        "🦞 *happy lobster noises*",
+      ];
+      alert(messages[Math.floor(Math.random() * messages.length)]);
+    });
+    
+    // Update CPU tracking for lobster
+    const originalFetchLive = fetchLiveData;
+    fetchLiveData = async function() {
+      await originalFetchLive();
+      const cpuEl = document.getElementById('cpu-value');
+      if (cpuEl) {
+        currentCpu = parseFloat(cpuEl.textContent) || 0;
+        updateLobsterMood();
+      }
+    };
+    
+    // Initialize
+    fetchLiveData();
+    fetchOpenClawStats();
+    fetchTokens();
+    fetchCronJobs();
+    fetchConnections();
+    fetchQuote();
+    fetchProcessInsights();
+    updateBadgeDisplay();
+    
+    setInterval(fetchLiveData, 3000);
+    setInterval(fetchOpenClawStats, 30000);
+    setInterval(fetchTokens, 60000);
+    setInterval(fetchCronJobs, 60000);
+    setInterval(fetchConnections, 30000);
+    setInterval(fetchProcessInsights, 30000);
+    setInterval(fetchQuote, 300000); // New quote every 5 min
+  </script>
+</body>
+</html>

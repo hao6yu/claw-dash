@@ -1,0 +1,30 @@
+# Database
+history.db
+history.db-journal
+
+# Logs
+logs/
+*.log
+*.err
+
+# Config (contains user-specific settings)
+config.json
+
+# macOS
+.DS_Store
+._*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dashboard.collector</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>collector.py</string>
+    </array>
+    <!-- UPDATE THIS PATH to your dashboard directory -->
+    <key>WorkingDirectory</key>
+    <string>/path/to/mac-dashboard</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/path/to/mac-dashboard/logs/collector.log</string>
+    <key>StandardErrorPath</key>
+    <string>/path/to/mac-dashboard/logs/collector.err</string>
+</dict>
+</plist>
