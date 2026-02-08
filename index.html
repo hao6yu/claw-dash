@@ -1090,6 +1090,7 @@
                 </div>
               </div>
             </div>
+            <div class="tokens-note" id="tokens-estimate-note">Estimated from total tokens</div>
           </div>
           
           <!-- Jobs Section -->
@@ -1332,30 +1333,19 @@
     const hostname = window.location.hostname;
     const isLarryPath = window.location.pathname.startsWith('/larry');
     
-    // Glances API for metrics
-    let GLANCES_API;
-    if (isLarryPath) {
-      // Served via Tailscale /larry path
-      GLANCES_API = `${window.location.origin}/larry/glances/api/4`;
-    } else if (isHTTPS) {
-      GLANCES_API = `https://${hostname}:8445/api/4`;
-    } else {
-      GLANCES_API = `http://${hostname}:61208/api/4`;
-    }
-    
-    // Dashboard API for OpenClaw/history
+    // Dashboard API for OpenClaw/history + proxied Glances
     let DASHBOARD_API;
     if (isLarryPath) {
       // Served via Tailscale /larry path
       DASHBOARD_API = `${window.location.origin}/larry/api`;
     } else if (isHTTPS) {
-      DASHBOARD_API = `https://${hostname}:8444`;
+      DASHBOARD_API = `${window.location.origin}/api`;
     } else {
       DASHBOARD_API = `http://${hostname}:8889`;
     }
     
-    // Default API base for metrics
-    const API_BASE = GLANCES_API;
+    // Glances is proxied through dashboard API
+    const API_BASE = `${DASHBOARD_API}/glances`;
     const circumference = 2 * Math.PI * 40;
     let currentTimeRange = '1h';
     let charts = {};
@@ -1640,6 +1630,15 @@
       const val = (bytes / Math.pow(k, i)).toFixed(1);
       return val + ' ' + sizes[i] + (perSec ? '/s' : '');
     }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
     
     function drawSparkline(canvasId, data, color) {
       const canvas = document.getElementById(canvasId);
@@ -1861,7 +1860,7 @@
           .slice(0, 5);
         document.getElementById('processes').innerHTML = topProcs.map(p => `
           <div class="process-item">
-            <span class="process-name">${p.name || 'Unknown'}</span>
+            <span class="process-name">${escapeHtml(p.name || 'Unknown')}</span>
             <span class="process-cpu">${(p.cpu_percent || 0).toFixed(1)}%</span>
           </div>
         `).join('');
@@ -2084,11 +2083,19 @@
         const res = await fetch(`${DASHBOARD_API}/tokens`);
         const data = await res.json();
         
-        const costStr = '$' + (data.cost?.total || 0).toFixed(2);
+        const prefix = data.estimated ? '~' : '';
+        const costStr = prefix + '$' + (data.cost?.total || 0).toFixed(2);
         document.getElementById('cost-total').textContent = costStr;
         document.getElementById('oc-cost-compact').textContent = costStr;
         document.getElementById('tokens-input').textContent = formatNumber(data.input || 0);
         document.getElementById('tokens-output').textContent = formatNumber(data.output || 0);
+        
+        const note = document.getElementById('tokens-estimate-note');
+        if (note) {
+          const label = data.estimateLabel || 'Estimated from total tokens';
+          const pricingModel = data.pricingModel ? ` (${data.pricingModel})` : '';
+          note.textContent = `${label}${pricingModel}`;
+        }
         
         drawTokenPie(data.input || 0, data.output || 0);
       } catch (e) {
@@ -2108,16 +2115,18 @@
         }
         
         container.innerHTML = data.jobs.slice(0, 5).map(job => {
+          const safeName = escapeHtml(job.name || 'Unnamed');
+          const safeSchedule = escapeHtml(job.schedule || 'unknown');
           const nextRun = job.nextRun ? new Date(job.nextRun).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
           }) : 'N/A';
           const statusIcon = job.lastStatus === 'ok' ? '✓' : job.lastStatus === 'error' ? '✗' : '○';
-          const statusClass = job.lastStatus || '';
+          const statusClass = (job.lastStatus === 'ok' || job.lastStatus === 'error') ? job.lastStatus : '';
           
           return `
             <div class="job-item">
-              <span class="job-name" title="${job.name}">${job.name}</span>
-              <span class="job-schedule">${job.schedule}</span>
+              <span class="job-name" title="${safeName}">${safeName}</span>
+              <span class="job-schedule">${safeSchedule}</span>
               <span class="job-next">→ ${nextRun}</span>
               <span class="job-status ${statusClass}">${statusIcon}</span>
             </div>
@@ -2141,8 +2150,8 @@
         
         container.innerHTML = data.connections.slice(0, 8).map(conn => `
           <div class="conn-item">
-            <span class="conn-process">${conn.process}</span>
-            <span class="conn-host">${conn.host}:${conn.port}</span>
+            <span class="conn-process">${escapeHtml(conn.process)}</span>
+            <span class="conn-host">${escapeHtml(conn.host)}:${Number(conn.port) || 0}</span>
           </div>
         `).join('');
       } catch (e) {
@@ -2178,10 +2187,11 @@
           const cpuPct = Math.min(100, proc.cpu);
           const hasHistory = proc.avg_cpu !== null;
           const isAnomaly = proc.anomaly;
+          const safeName = escapeHtml(proc.name);
           
           return `
             <div class="insight-item ${isAnomaly ? 'anomaly' : ''}">
-              <span class="insight-name" title="${proc.name}">${proc.name}</span>
+              <span class="insight-name" title="${safeName}">${safeName}</span>
               <div class="insight-stat">
                 <div class="insight-current">${proc.cpu.toFixed(1)}% CPU</div>
                 ${hasHistory ? `<div class="insight-avg">avg: ${proc.avg_cpu}%</div>` : ''}

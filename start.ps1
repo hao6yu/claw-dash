@@ -15,6 +15,7 @@ $DashboardPort = if ($env:DASHBOARD_PORT) { $env:DASHBOARD_PORT } else { 8888 }
 $ApiPort = if ($env:API_PORT) { $env:API_PORT } else { 8889 }
 $GlancesPort = if ($env:GLANCES_PORT) { $env:GLANCES_PORT } else { 61208 }
 $BindAddress = if ($env:BIND_ADDRESS) { $env:BIND_ADDRESS } else { "127.0.0.1" }
+$ApiBindAddress = if ($env:API_BIND_ADDRESS) { $env:API_BIND_ADDRESS } else { $BindAddress }
 $PidDir = ".\pids"
 $LogDir = ".\logs"
 
@@ -145,10 +146,11 @@ function Start-Services {
     # Start API server
     Write-Host "Starting API server..." -ForegroundColor Yellow
     $env:PORT = $ApiPort
+    $env:API_BIND_ADDRESS = $ApiBindAddress
     $proc = Start-Process -FilePath "node" -ArgumentList "api-server.js" -WindowStyle Hidden -PassThru -RedirectStandardOutput "$LogDir\api-server.log"
     $proc.Id | Out-File "$PidDir\api-server.pid"
     Start-Sleep -Seconds 1
-    Write-Status "●" "API server started on port $ApiPort" Green
+    Write-Status "●" "API server started on ${ApiBindAddress}:$ApiPort" Green
     
     # Start collector
     Write-Host "Starting data collector..." -ForegroundColor Yellow
@@ -167,7 +169,7 @@ function Start-Services {
     Write-Host "All services started!" -ForegroundColor Green
     Write-Host ""
     Write-Host "Dashboard: " -NoNewline; Write-Host "http://${BindAddress}:${DashboardPort}" -ForegroundColor Cyan
-    Write-Host "API:       " -NoNewline; Write-Host "http://${BindAddress}:${ApiPort}" -ForegroundColor Cyan
+    Write-Host "API:       " -NoNewline; Write-Host "http://${ApiBindAddress}:${ApiPort}" -ForegroundColor Cyan
     Write-Host "Glances:   " -NoNewline; Write-Host "http://${BindAddress}:${GlancesPort}" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Logs in $LogDir\"
@@ -175,6 +177,7 @@ function Start-Services {
     if ($BindAddress -eq "127.0.0.1") {
         Write-Host "Remote access:" -ForegroundColor Yellow
         Write-Host "  tailscale serve --bg $DashboardPort"
+        Write-Host "  tailscale serve --bg --set-path /api http://127.0.0.1:$ApiPort"
         Write-Host "  Then visit: https://`$(hostname).your-tailnet.ts.net"
         Write-Host ""
     }
@@ -200,6 +203,7 @@ function Show-Help {
     Write-Host ""
     Write-Host "Environment variables:"
     Write-Host "  BIND_ADDRESS    IP to bind to (default: 127.0.0.1)"
+    Write-Host "  API_BIND_ADDRESS  API bind IP (default: BIND_ADDRESS)"
     Write-Host "  DASHBOARD_PORT  Dashboard port (default: 8888)"
     Write-Host "  API_PORT        API server port (default: 8889)"
     Write-Host "  GLANCES_PORT    Glances API port (default: 61208)"

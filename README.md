@@ -198,6 +198,9 @@ Access at `http://192.168.50.2:8888` from any device on your LAN.
 # Expose dashboard with HTTPS
 tailscale serve --bg 8888
 
+# Expose dashboard API (required for live stats/history)
+tailscale serve --bg --set-path /api http://127.0.0.1:8889
+
 # Check your Tailscale hostname
 tailscale status
 ```
@@ -213,10 +216,7 @@ https://your-hostname.tailnet-name.ts.net
 > - Works from phone, laptop, anywhere
 > - No port forwarding or firewall changes needed
 
-**Optional: Expose API too:**
-```bash
-tailscale serve --bg --set-path /api http://127.0.0.1:8889
-```
+The dashboard expects API at `/api` when served over HTTPS.
 
 ---
 

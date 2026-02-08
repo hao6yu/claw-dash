@@ -5,10 +5,11 @@ REM Usage: start.bat [stop|status]
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
-set DASHBOARD_PORT=8888
-set API_PORT=8889
-set GLANCES_PORT=61208
+if "%DASHBOARD_PORT%"=="" set DASHBOARD_PORT=8888
+if "%API_PORT%"=="" set API_PORT=8889
+if "%GLANCES_PORT%"=="" set GLANCES_PORT=61208
 if "%BIND_ADDRESS%"=="" set BIND_ADDRESS=127.0.0.1
+if "%API_BIND_ADDRESS%"=="" set API_BIND_ADDRESS=%BIND_ADDRESS%
 
 if "%1"=="stop" goto :stop
 if "%1"=="status" goto :status
@@ -73,8 +74,10 @@ timeout /t 2 /nobreak >nul
 
 REM Start API server
 echo Starting API server...
+set PORT=%API_PORT%
+set API_BIND_ADDRESS=%API_BIND_ADDRESS%
 start /b "" node api-server.js > logs\api-server.log 2>&1
-echo [OK] API server starting on port %API_PORT%
+echo [OK] API server starting on %API_BIND_ADDRESS%:%API_PORT%
 
 REM Start collector
 echo Starting data collector...
@@ -91,7 +94,7 @@ echo ================================
 echo All services started!
 echo.
 echo Dashboard: http://%BIND_ADDRESS%:%DASHBOARD_PORT%
-echo API:       http://%BIND_ADDRESS%:%API_PORT%
+echo API:       http://%API_BIND_ADDRESS%:%API_PORT%
 echo Glances:   http://%BIND_ADDRESS%:%GLANCES_PORT%
 echo.
 echo Logs in .\logs\
@@ -99,6 +102,7 @@ echo.
 if "%BIND_ADDRESS%"=="127.0.0.1" (
     echo Remote access:
     echo   tailscale serve --bg %DASHBOARD_PORT%
+    echo   tailscale serve --bg --set-path /api http://127.0.0.1:%API_PORT%
     echo   Then visit your Tailscale hostname with https://
     echo.
 )

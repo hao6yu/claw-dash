@@ -37,10 +37,10 @@ def get_node_version():
     try:
         result = subprocess.run(["node", "-v"], capture_output=True, text=True, timeout=5)
         if result.returncode == 0:
-            return result.stdout.strip()  # Returns like "v24.13.0"
+            return result.stdout.strip().lstrip("v")  # Returns like "24.13.0"
     except:
         pass
-    return "v18.0.0"  # Fallback
+    return "18.0.0"  # Fallback
 
 OPENCLAW_PATH = find_openclaw()
 
@@ -271,14 +271,14 @@ def main():
                 print(f"        📊 Tracked {len(procs)} processes")
         
         # Collect OpenClaw stats every 5 minutes (every 5 samples)
-        if sample_count % 5 == 0:
+        if sample_count > 0 and sample_count % 5 == 0:
             oc_data = collect_openclaw_stats()
             if oc_data:
                 save_openclaw_stats(oc_data)
                 print(f"        🦞 OpenClaw: {oc_data['sessions']} sessions, {oc_data['tokens']} tokens")
         
         # Cleanup old data every hour
-        if sample_count % 60 == 0:
+        if sample_count > 0 and sample_count % 60 == 0:
             cleanup_old_data()
         
         time.sleep(INTERVAL)

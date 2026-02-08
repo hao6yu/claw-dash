@@ -10,6 +10,7 @@ DASHBOARD_PORT=${DASHBOARD_PORT:-8888}
 API_PORT=${API_PORT:-8889}
 GLANCES_PORT=${GLANCES_PORT:-61208}
 BIND_ADDRESS=${BIND_ADDRESS:-127.0.0.1}
+API_BIND_ADDRESS=${API_BIND_ADDRESS:-$BIND_ADDRESS}
 PID_DIR="./pids"
 
 # Detect OS
@@ -147,13 +148,17 @@ start_services() {
     
     # Start API server
     echo -e "${YELLOW}Starting API server...${NC}"
-    PORT=$API_PORT node api-server.js >> logs/api-server.log 2>&1 &
+    PORT=$API_PORT API_BIND_ADDRESS="$API_BIND_ADDRESS" node api-server.js >> logs/api-server.log 2>&1 &
     echo $! > "$PID_DIR/api-server.pid"
     sleep 1
-    if [ -z "${SKIP_HEALTH_CHECK:-}" ] && curl -s "http://localhost:$API_PORT/api/quote" >/dev/null 2>&1; then
-        echo -e "  ${GREEN}●${NC} API server started on port $API_PORT"
+    API_CHECK_HOST="$API_BIND_ADDRESS"
+    if [ "$API_CHECK_HOST" = "0.0.0.0" ]; then
+        API_CHECK_HOST="127.0.0.1"
+    fi
+    if [ -z "${SKIP_HEALTH_CHECK:-}" ] && curl -s "http://$API_CHECK_HOST:$API_PORT/api/quote" >/dev/null 2>&1; then
+        echo -e "  ${GREEN}●${NC} API server started on $API_BIND_ADDRESS:$API_PORT"
     else
-        echo -e "  ${YELLOW}○${NC} API server starting on port $API_PORT..."
+        echo -e "  ${YELLOW}○${NC} API server starting on $API_BIND_ADDRESS:$API_PORT..."
     fi
     
     # Start collector
@@ -174,7 +179,7 @@ start_services() {
     echo -e "${GREEN}All services started!${NC}"
     echo ""
     echo -e "Dashboard: ${BLUE}http://$BIND_ADDRESS:$DASHBOARD_PORT${NC}"
-    echo -e "API:       ${BLUE}http://$BIND_ADDRESS:$API_PORT${NC}"
+    echo -e "API:       ${BLUE}http://$API_BIND_ADDRESS:$API_PORT${NC}"
     echo -e "Glances:   ${BLUE}http://$BIND_ADDRESS:$GLANCES_PORT${NC}"
     echo ""
     echo "Logs in ./logs/"
@@ -182,6 +187,7 @@ start_services() {
     if [ "$BIND_ADDRESS" = "127.0.0.1" ]; then
         echo -e "${YELLOW}Remote access:${NC}"
         echo "  tailscale serve --bg $DASHBOARD_PORT"
+        echo "  tailscale serve --bg --set-path /api http://127.0.0.1:$API_PORT"
         echo "  Then visit: https://\$(hostname).your-tailnet.ts.net"
         echo ""
     fi
@@ -218,6 +224,7 @@ case "${1:-}" in
         echo ""
         echo "Environment variables:"
         echo "  BIND_ADDRESS    IP to bind to (default: 127.0.0.1)"
+        echo "  API_BIND_ADDRESS  API bind IP (default: BIND_ADDRESS)"
         echo "  DASHBOARD_PORT  Dashboard port (default: 8888)"
         echo "  API_PORT        API server port (default: 8889)"
         echo "  GLANCES_PORT    Glances API port (default: 61208)"
