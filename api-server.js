@@ -215,7 +215,10 @@ async function getOpenClawStatusJson() {
       throw new Error('openclaw not found');
     }
     const result = await runCommand(openclawPath, ['status', '--json'], 15000, { HOME: HOME_DIR });
-    return JSON.parse(result);
+    // Strip any non-JSON prefix (e.g. config warnings) before parsing
+    const jsonStart = result.indexOf('{');
+    const jsonStr = jsonStart >= 0 ? result.slice(jsonStart) : result;
+    return JSON.parse(jsonStr);
   });
 }
 
