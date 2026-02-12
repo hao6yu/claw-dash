@@ -361,6 +361,21 @@
       background: linear-gradient(180deg, #c9a227 0%, #8b6914 100%);
     }
     
+    /* Warcraft mascot - swap lobster for peon */
+    .mascot-warcraft { display: none; }
+    .mascot-default { display: inline; }
+    
+    [data-theme="warcraft"] .mascot-warcraft { display: inline; }
+    [data-theme="warcraft"] .mascot-default { display: none; }
+    
+    [data-theme="warcraft"] .pet-lobster {
+      filter: drop-shadow(0 0 10px rgba(201,162,39,0.5));
+    }
+    
+    [data-theme="warcraft"] .lobster-mood {
+      color: #f4d03f;
+    }
+    
     .header {
       text-align: center;
       margin-bottom: 16px;
@@ -1437,9 +1452,9 @@
       </div>
     </div>
     
-    <!-- Pet Lobster -->
+    <!-- Pet Lobster / Theme Mascot -->
     <div class="pet-lobster" id="pet-lobster" title="Hi! I'm Larry the Lobster 🦞">
-      <div class="lobster-body">🦞</div>
+      <div class="lobster-body"><span class="mascot-default">🦞</span><span class="mascot-warcraft">👹</span></div>
       <div class="lobster-mood" id="lobster-mood">😊</div>
     </div>
   </div>
@@ -1779,6 +1794,16 @@
       
       // Update toggle button icon
       document.getElementById('current-theme-icon').textContent = themeInfo[theme].icon;
+      
+      // Update mascot based on theme
+      const petLobster = document.getElementById('pet-lobster');
+      if (petLobster) {
+        if (theme === 'warcraft') {
+          petLobster.title = "Zug zug! Ready to work 👹";
+        } else {
+          petLobster.title = "Hi! I'm Larry the Lobster 🦞";
+        }
+      }
       
       // Update dropdown active state
       document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
