@@ -77,20 +77,21 @@
     }
     
     [data-theme="warcraft"] {
-      --bg-gradient-1: #0d0d0d;
-      --bg-gradient-2: #1a1510;
-      --card-bg: rgba(42,37,32,0.9);
-      --card-border: #c9a227;
-      --text-primary: #e8dcc8;
-      --text-secondary: #a89880;
-      --accent-pink: #c9a227;
+      --bg-gradient-1: #08080f;
+      --bg-gradient-2: #0a0d16;
+      --card-bg: #111118;
+      --card-border: #fcd312;
+      --text-primary: #f4f7ff;
+      --text-secondary: #9aa4c0;
+      --accent-pink: #fcd312;
       --accent-blue: #60a5fa;
-      --accent-purple: #c9a227;
-      --accent-green: #4ade80;
-      --accent-orange: #f4d03f;
-      --wc3-gold: #c9a227;
-      --wc3-gold-light: #f4d03f;
-      --wc3-gold-dark: #8b6914;
+      --accent-purple: #fcd312;
+      --accent-green: #58d869;
+      --accent-orange: #fcd312;
+      --wc3-gold: #fcd312;
+      --wc3-gold-light: #fcd312;
+      --wc3-gold-dark: #cca300;
+      --wc3-white: #ffffff;
     }
     
     body {
@@ -146,219 +147,101 @@
       50% { opacity: 1; }
     }
     
-    /* Warcraft III Theme - Full aesthetic */
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Almendra:wght@400;700&display=swap');
+    /* Warcraft III Theme - Using wc3ui assets */
+    @import url('https://wc3ui.banteg.xyz/assets/index-Qa97UvV0.css');
+    
+    /* Fallback fonts if wc3ui CSS loads */
+    @font-face {
+      font-family: 'Friz Quadrata';
+      src: url('https://wc3ui.banteg.xyz/fonts/FRIZQT__.TTF') format('truetype');
+      font-weight: 400;
+      font-display: swap;
+    }
     
     [data-theme="warcraft"] body {
-      font-family: 'Almendra', serif;
-      background: 
-        radial-gradient(ellipse at top, rgba(139,105,20,0.15) 0%, transparent 50%),
-        linear-gradient(135deg, #0d0d0d 0%, #1a1510 30%, #0d0908 70%, #0d0d0d 100%);
+      font-family: 'Friz Quadrata', 'Palatino Linotype', 'Book Antiqua', serif;
+      background: #08080f;
     }
     
     [data-theme="warcraft"] .header {
-      background: linear-gradient(180deg, rgba(26,21,16,0.95) 0%, rgba(42,37,32,0.9) 100%);
-      border: 3px solid #8b6914;
-      position: relative;
-      margin-bottom: 20px;
-      box-shadow: 
-        inset 0 0 30px rgba(0,0,0,0.7),
-        0 0 20px rgba(0,0,0,0.9),
-        0 4px 15px rgba(0,0,0,0.6);
-    }
-    
-    [data-theme="warcraft"] .header::before {
-      content: '';
-      position: absolute;
-      top: -6px; left: -6px; right: -6px; bottom: -6px;
-      border: 2px solid #c9a227;
-      pointer-events: none;
-    }
-    
-    /* Gold corner ornaments */
-    [data-theme="warcraft"] .header::after,
-    [data-theme="warcraft"] .card::after {
-      content: '';
-      position: absolute;
-      top: -3px; left: -3px;
-      width: 20px; height: 20px;
-      border-top: 4px solid #f4d03f;
-      border-left: 4px solid #f4d03f;
-      pointer-events: none;
+      background: var(--card-bg);
+      border: 1px solid #222233;
+      border-radius: 8px;
     }
     
     [data-theme="warcraft"] .header h1 {
-      font-family: 'Cinzel', serif;
-      color: #f4d03f;
-      text-shadow: 
-        0 0 20px rgba(244, 208, 63, 0.6),
-        0 0 40px rgba(201, 162, 39, 0.4),
-        3px 3px 6px rgba(0,0,0,0.9);
-      letter-spacing: 4px;
-      font-size: 26px;
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
+      color: var(--wc3-gold);
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
+      letter-spacing: 2px;
+      font-size: 24px;
     }
     
     [data-theme="warcraft"] .card {
-      background: linear-gradient(180deg, #2a2520 0%, #1e1c18 50%, #171513 100%);
-      border: 3px solid #8b6914;
-      border-radius: 0;
+      background: var(--card-bg);
+      border: 1px solid #222233;
+      border-radius: 8px;
       position: relative;
-      box-shadow: 
-        inset 0 1px 0 rgba(201,162,39,0.2),
-        inset 0 0 30px rgba(0,0,0,0.6),
-        0 0 15px rgba(0,0,0,0.8),
-        0 8px 20px rgba(0,0,0,0.5);
-    }
-    
-    [data-theme="warcraft"] .card::before {
-      content: '';
-      position: absolute;
-      top: -6px; left: -6px; right: -6px; bottom: -6px;
-      border: 2px solid rgba(201,162,39,0.6);
-      pointer-events: none;
-    }
-    
-    /* Additional corners for cards */
-    [data-theme="warcraft"] .card .wc3-corner-tr,
-    [data-theme="warcraft"] .card .wc3-corner-bl,
-    [data-theme="warcraft"] .card .wc3-corner-br {
-      position: absolute;
-      width: 20px; height: 20px;
-      pointer-events: none;
     }
     
     [data-theme="warcraft"] .card h3 {
-      font-family: 'Cinzel', serif;
-      color: #f4d03f;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      font-size: 13px;
-      border-bottom: 2px solid #8b6914;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-      text-shadow: 0 0 10px rgba(244,208,63,0.3);
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
+      color: var(--wc3-gold);
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.9);
+      letter-spacing: 1px;
     }
     
     [data-theme="warcraft"] .metric-value {
-      color: #e8dcc8;
-      text-shadow: 0 0 15px rgba(201,162,39,0.4);
+      color: var(--wc3-white);
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.9);
     }
     
     [data-theme="warcraft"] .metric-label {
-      color: #a89880;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-size: 10px;
+      color: var(--text-secondary);
     }
     
     [data-theme="warcraft"] .control-bar {
-      background: linear-gradient(180deg, #2a2520 0%, #1e1c18 100%);
-      border: 2px solid #8b6914;
-      border-radius: 0;
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-    }
-    
-    [data-theme="warcraft"] .control-tabs {
-      background: rgba(0,0,0,0.3);
-      border-radius: 0;
+      background: var(--card-bg);
+      border: 1px solid #222233;
+      border-radius: 25px;
     }
     
     [data-theme="warcraft"] .control-tabs .tab {
-      font-family: 'Cinzel', serif;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-size: 10px;
-      border-radius: 0;
-      color: #a89880;
-      transition: all 0.2s;
-    }
-    
-    [data-theme="warcraft"] .control-tabs .tab:hover {
-      color: #f4d03f;
-      text-shadow: 0 0 10px rgba(244,208,63,0.5);
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
     }
     
     [data-theme="warcraft"] .control-tabs .tab.active {
-      background: linear-gradient(180deg, #8b6914 0%, #5a4510 100%);
-      color: #f4d03f;
-      box-shadow: 
-        inset 0 1px 0 rgba(255,255,255,0.2),
-        0 0 10px rgba(201,162,39,0.3);
-    }
-    
-    [data-theme="warcraft"] .theme-btn,
-    [data-theme="warcraft"] .edit-btn {
-      border-radius: 0;
-      border: 1px solid #8b6914;
-      background: linear-gradient(180deg, #3a3530 0%, #2a2520 100%);
-    }
-    
-    [data-theme="warcraft"] .theme-btn:hover,
-    [data-theme="warcraft"] .edit-btn:hover {
-      background: linear-gradient(180deg, #4a4540 0%, #3a3530 100%);
-      border-color: #c9a227;
-      box-shadow: 0 0 15px rgba(201,162,39,0.3);
+      background: rgba(252,211,18,0.15);
+      color: var(--wc3-gold);
     }
     
     [data-theme="warcraft"] .theme-dropdown {
-      background: linear-gradient(180deg, #2a2520 0%, #1e1c18 100%);
-      border: 2px solid #8b6914;
-      border-radius: 0;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.8);
-    }
-    
-    [data-theme="warcraft"] .theme-option {
-      border-radius: 0;
-      font-family: 'Cinzel', serif;
-      text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: 1px;
+      background: var(--card-bg);
+      border: 1px solid #222233;
+      border-radius: 8px;
     }
     
     [data-theme="warcraft"] .theme-option:hover {
-      background: linear-gradient(90deg, rgba(201,162,39,0.2) 0%, transparent 100%);
-      color: #f4d03f;
+      background: rgba(252,211,18,0.1);
+      color: var(--wc3-gold);
     }
     
     [data-theme="warcraft"] .status::before {
-      background: #4ade80;
-      box-shadow: 0 0 10px #4ade80, 0 0 20px rgba(74,222,128,0.5);
+      background: #58d869;
     }
     
-    @keyframes wc3-glow {
-      0%, 100% { box-shadow: 0 0 5px #8b6914, inset 0 0 30px rgba(0,0,0,0.6); }
-      50% { box-shadow: 0 0 20px #c9a227, 0 0 40px rgba(201,162,39,0.3), inset 0 0 30px rgba(0,0,0,0.6); }
-    }
-    
-    [data-theme="warcraft"] .card:hover {
-      animation: wc3-glow 2s infinite;
-    }
-    
-    /* Progress bars */
-    [data-theme="warcraft"] .progress-bar {
-      background: rgba(0,0,0,0.5);
-      border: 1px solid #8b6914;
-      border-radius: 0;
-    }
-    
-    [data-theme="warcraft"] .progress-fill {
-      background: linear-gradient(180deg, #c9a227 0%, #8b6914 100%);
-      border-radius: 0;
-    }
-    
-    /* Scrollbar */
+    /* Scrollbar - wc3ui style */
     [data-theme="warcraft"] ::-webkit-scrollbar {
-      width: 12px;
-      background: #1a1510;
+      width: 8px;
+    }
+    
+    [data-theme="warcraft"] ::-webkit-scrollbar-track {
+      background: #111;
     }
     
     [data-theme="warcraft"] ::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #8b6914 0%, #5a4510 100%);
-      border: 1px solid #c9a227;
-    }
-    
-    [data-theme="warcraft"] ::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, #c9a227 0%, #8b6914 100%);
+      background: #333;
+      border-radius: 4px;
     }
     
     /* Warcraft mascot - swap lobster for peon */
