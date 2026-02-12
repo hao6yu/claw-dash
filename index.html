@@ -297,6 +297,12 @@
       animation: pulse 2s infinite;
     }
     
+    .last-updated {
+      font-size: 10px;
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
@@ -1102,6 +1108,7 @@
   <div class="header">
     <h1>🖥️ Mac Mini</h1>
     <div class="status" id="status">Connecting...</div>
+    <div class="last-updated" id="last-updated"></div>
   </div>
   
   <a href="https://buymeacoffee.com/hao_yu" target="_blank" class="coffee-btn" title="Buy me a coffee ☕">☕</a>
@@ -1481,6 +1488,17 @@
     let currentTimeRange = '1h';
     let charts = {};
     let sparkData = { cpu: [], ram: [], netDown: [], netUp: [] };
+    let lastDataRefresh = null;
+
+    // Last-updated ticker
+    setInterval(() => {
+      const el = document.getElementById('last-updated');
+      if (!lastDataRefresh || !el) return;
+      const sec = Math.round((Date.now() - lastDataRefresh) / 1000);
+      el.textContent = sec < 5 ? 'Updated just now' : `Updated ${sec}s ago`;
+    }, 1000);
+
+    function markRefresh() { lastDataRefresh = Date.now(); }
     let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
     let achievements = JSON.parse(localStorage.getItem('achievements') || '{}');
     let stats = JSON.parse(localStorage.getItem('dashStats') || '{"views":0,"peakCpu":0}');
@@ -1907,6 +1925,7 @@
           fetch(`${API_BASE}/uptime`).then(r => r.text())
         ]);
         
+        markRefresh();
         const cpuPercent = Math.round(cpu.total || 0);
         document.getElementById('cpu-value').textContent = cpuPercent;
         setGauge('cpu-gauge', cpuPercent);
