@@ -693,7 +693,13 @@ const server = http.createServer(async (req, res) => {
     } else if (url.pathname === '/health' || url.pathname === '/api/health') {
       sendJson(res, 200, await getHealthStatus());
     } else {
-      sendJson(res, 404, { error: 'Not found' });
+      // Serve index.html for root or unknown paths (SPA fallback)
+      const indexPath = path.join(__dirname, 'index.html');
+      fs.readFile(indexPath, 'utf8', (err, data) => {
+        if (err) { sendJson(res, 404, { error: 'Not found' }); return; }
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(data);
+      });
     }
   } catch (e) {
     sendJson(res, 500, { error: 'Internal server error', detail: formatError(e) });
