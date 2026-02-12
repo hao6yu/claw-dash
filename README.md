@@ -48,6 +48,7 @@ https://your-mac-mini.tailnet.ts.net
 - **Achievements**: Fun badges for system milestones
 - **Customizable Layout**: Drag & drop widgets, show/hide panels
 - **Mobile Friendly**: Responsive design works on any screen
+- **Last Updated Indicator**: Timestamp showing when data was last refreshed, auto-updates in real time
 - **Larry the Lobster**: Pet mascot that reacts to CPU usage 🦞
 
 ## Platform Support
