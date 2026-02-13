@@ -1032,6 +1032,97 @@
       75% { transform: translateX(5px); }
     }
     
+    /* Fireteam Roster */
+    .fireteam-card {
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+    }
+    
+    .fireteam-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .agent-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      position: relative;
+      transition: all 0.3s;
+    }
+    
+    .agent-card:hover {
+      border-color: var(--accent-purple);
+      background: rgba(255,255,255,0.07);
+    }
+    
+    .agent-emoji {
+      font-size: 28px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    
+    .agent-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .agent-role {
+      font-size: 10px;
+      color: var(--accent-purple);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+    
+    .agent-model {
+      font-size: 9px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      line-height: 1.3;
+    }
+    
+    .agent-status {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+    
+    /* Warcraft fireteam overrides */
+    [data-theme="warcraft"] .fireteam-card {
+      background: var(--card-bg);
+      border-color: #222233;
+    }
+    
+    [data-theme="warcraft"] .agent-card {
+      border-color: #222233;
+      background: rgba(252,211,18,0.03);
+    }
+    
+    [data-theme="warcraft"] .agent-card:hover {
+      border-color: var(--wc3-gold);
+      box-shadow: 0 0 12px rgba(252,211,18,0.15);
+    }
+    
+    [data-theme="warcraft"] .agent-name {
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
+      color: var(--wc3-gold);
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.9);
+    }
+    
+    [data-theme="warcraft"] .agent-role {
+      color: var(--text-secondary);
+    }
+
     .hidden { display: none !important; }
     
     /* Grid Controls & Edit Mode */
@@ -1340,6 +1431,14 @@
         <div class="quote-text" id="quote-text">"Loading wisdom..."</div>
         <div class="quote-author" id="quote-author">— Loading</div>
       </div>
+      
+      <!-- Fireteam Roster -->
+      <div class="card wide fireteam-card widget" id="widget-fireteam" data-widget="fireteam" data-label="🎖️ Fireteam">
+        <div class="card-label">🎖️ Fireteam Roster</div>
+        <div class="fireteam-grid" id="fireteam-grid">
+          <div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:16px;">Loading roster...</div>
+        </div>
+      </div>
     </div>
     
     <!-- Pet Lobster / Theme Mascot -->
@@ -1508,7 +1607,7 @@
     let sortableInstance = null;
     
     // Widget management
-    const DEFAULT_WIDGET_ORDER = ['openclaw-card', 'widget-cpu', 'widget-memory', 'widget-disk', 'widget-system', 'widget-network', 'widget-processes', 'widget-insights', 'widget-connections', 'widget-quote'];
+    const DEFAULT_WIDGET_ORDER = ['openclaw-card', 'widget-cpu', 'widget-memory', 'widget-disk', 'widget-system', 'widget-network', 'widget-processes', 'widget-insights', 'widget-connections', 'widget-quote', 'widget-fireteam'];
     const WIDGET_LABELS = {
       'openclaw-card': '🦞 OpenClaw',
       'widget-cpu': '💻 CPU',
@@ -1519,7 +1618,8 @@
       'widget-processes': '📋 Processes',
       'widget-insights': '📊 Insights',
       'widget-connections': '🌐 Connections',
-      'widget-quote': '💬 Quote'
+      'widget-quote': '💬 Quote',
+      'widget-fireteam': '🎖️ Fireteam'
     };
     
     function getWidgetOrder() {
@@ -2425,6 +2525,35 @@
       }
     };
     
+    async function fetchFireteam() {
+      try {
+        const res = await fetch(`${DASHBOARD_API}/agents`);
+        const agents = await res.json();
+        const container = document.getElementById('fireteam-grid');
+        
+        if (!agents || agents.length === 0) {
+          container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:16px;grid-column:span 2;">No agents configured</div>';
+          return;
+        }
+        
+        container.innerHTML = agents.map(agent => {
+          const model = (agent.primaryModel || 'unknown').replace('anthropic/', '').replace('openai/', '');
+          const fallback = (agent.fallbacks && agent.fallbacks[0]) ? agent.fallbacks[0].replace('anthropic/', '').replace('openai/', '') : 'none';
+          return `
+            <div class="agent-card">
+              <div class="agent-status"></div>
+              <span class="agent-emoji">${agent.emoji || '🤖'}</span>
+              <div class="agent-name">${escapeHtml(agent.name)}</div>
+              <div class="agent-role">${escapeHtml(agent.role)}</div>
+              <div class="agent-model">${escapeHtml(model)}<br>↳ ${escapeHtml(fallback)}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('Failed to fetch fireteam:', e);
+      }
+    }
+    
     // Initialize
     fetchLiveData();
     fetchOpenClawStats();
@@ -2432,6 +2561,7 @@
     fetchCronJobs();
     fetchConnections();
     fetchQuote();
+    fetchFireteam();
     fetchProcessInsights();
     updateBadgeDisplay();
     

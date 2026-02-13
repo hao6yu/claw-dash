@@ -638,6 +638,39 @@ async function getProcessInsights() {
   });
 }
 
+async function getAgents() {
+  return withCache('agents', 30000, async () => {
+    try {
+      const configPath = path.join(HOME_DIR, '.openclaw', 'openclaw.json');
+      const raw = fs.readFileSync(configPath, 'utf8');
+      const config = JSON.parse(raw);
+      const agents = config.agents || {};
+      const list = agents.list || [];
+      const defaults = agents.defaults || {};
+
+      return list.map(agent => {
+        const model = agent.model || defaults.model || {};
+        const roleMap = {
+          'main': 'Commander',
+          '01-tech-lead': 'Tech Lead',
+          '02-threat-hunter': 'Threat Hunter',
+          '03-lore-keeper': 'Lore Keeper'
+        };
+        return {
+          id: agent.id,
+          name: (agent.identity && agent.identity.name) || agent.id,
+          emoji: (agent.identity && agent.identity.emoji) || '🤖',
+          role: roleMap[agent.id] || agent.id.replace(/^\d+-/, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          primaryModel: model.primary || 'unknown',
+          fallbacks: model.fallbacks || []
+        };
+      });
+    } catch (e) {
+      return [];
+    }
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   // CORS headers
   const allowedOrigin = getAllowedOrigin(req);
@@ -690,6 +723,8 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 200, getRandomQuote());
     } else if (url.pathname === '/processes' || url.pathname === '/api/processes') {
       sendJson(res, 200, await getProcessInsights());
+    } else if (url.pathname === '/agents' || url.pathname === '/api/agents') {
+      sendJson(res, 200, await getAgents());
     } else if (url.pathname === '/health' || url.pathname === '/api/health') {
       sendJson(res, 200, await getHealthStatus());
     } else {
