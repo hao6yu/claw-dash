@@ -46,6 +46,7 @@ https://your-mac-mini.tailnet.ts.net
 - **Process Insights**: Top processes with historical comparison and anomaly detection
 - **Multiple Themes**: Dark, Light, Retro CRT, Hacker, Synthwave
 - **Achievements**: Fun badges for system milestones
+- **Fireteam Roster**: See your configured OpenClaw agents at a glance — names, roles, models, and callsigns
 - **Customizable Layout**: Drag & drop widgets, show/hide panels
 - **Mobile Friendly**: Responsive design works on any screen
 - **Last Updated Indicator**: Timestamp showing when data was last refreshed, auto-updates in real time
@@ -473,6 +474,7 @@ sudo systemctl start dashboard
 | `/api/cron` | Scheduled jobs list |
 | `/api/processes` | Process insights with anomaly detection |
 | `/api/connections` | Active network connections |
+| `/api/agents` | Fireteam roster (configured agents, roles, models) |
 | `/api/quote` | Random programming quote |
 
 ## Themes
